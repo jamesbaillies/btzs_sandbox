@@ -33,7 +33,7 @@ class DefaultsPage extends StatelessWidget {
                 context, 'Factors Defaults', const FactorsDefaultsPage(),
                 textStyle),
             _buildNavTile(
-                context, 'DOF Defaults', const DOFDefaultsPage(), textStyle),
+                context, 'DOF Defaults', const DofDefaultsPage(), textStyle),
             _buildNavTile(
                 context, 'Exposure Defaults', const ExposureDefaultsPage(),
                 textStyle),

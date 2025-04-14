@@ -1,95 +1,204 @@
 import 'package:flutter/cupertino.dart';
-import '../utils/session.dart';
-import 'metering_page.dart';
-import 'dof_page.dart';
-import 'factors_page.dart';
-import 'exposure_page.dart';
+import 'package:btzs_sandbox/utils/prefs_service.dart';
 
 class CameraPage extends StatefulWidget {
-  final Session session;
-
-  const CameraPage({super.key, required this.session});
+  const CameraPage({super.key});
 
   @override
   State<CameraPage> createState() => _CameraPageState();
 }
 
 class _CameraPageState extends State<CameraPage> {
-  int _tabIndex = 0;
+  final _titleController = TextEditingController();
+  final _holderController = TextEditingController();
 
-  final List<BottomNavigationBarItem> _tabs = const [
-    BottomNavigationBarItem(
-      icon: Icon(CupertinoIcons.camera),
-      label: 'Camera',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(CupertinoIcons.lightbulb),
-      label: 'Metering',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(CupertinoIcons.scope),
-      label: 'DOF',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(CupertinoIcons.slider_horizontal_3),
-      label: 'Factors',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(CupertinoIcons.doc_text),
-      label: 'Summary',
-    ),
+  String _selectedFilm = 'Not Set';
+  String _selectedFocalLength = 'Not Set';
+  double _flareFactor = 0.02;
+  double _paperES = 1.05;
+
+  final List<String> _films = [
+    'Not Set', 'APX DI#13 1+9 Lo', 'D100 DDX 1+9 Lo', 'TMY DDX 1+9 Lo'
+  ];
+
+  final List<String> _focalLengths = [
+    'Not Set', '90mm', '115mm', '210mm', '300mm'
   ];
 
   @override
-  Widget build(BuildContext context) {
-    return CupertinoTabScaffold(
-      tabBar: CupertinoTabBar(
-        items: _tabs,
-        currentIndex: _tabIndex,
-        onTap: (index) => setState(() => _tabIndex = index),
+  void initState() {
+    super.initState();
+    _loadDefaults();
+  }
+
+  Future<void> _loadDefaults() async {
+    final prefs = await PrefsService.loadSettings();
+    setState(() {
+      _selectedFilm = prefs['defaultFilm'] ?? 'Not Set';
+      _selectedFocalLength = prefs['defaultFocalLength'] ?? 'Not Set';
+    });
+
+    _flareFactor = await PrefsService.loadDouble('defaultFlareFactor', 0.02);
+    _paperES = await PrefsService.loadDouble('defaultPaperES', 1.05);
+  }
+
+  void _selectFromList(
+      String title,
+      List<String> items,
+      String current,
+      Function(String) onSelected,
+      ) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (_) => CupertinoActionSheet(
+        title: Text(title),
+        actions: items.map((item) {
+          return CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              onSelected(item);
+            },
+            child: Text(item),
+          );
+        }).toList(),
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Cancel"),
+        ),
       ),
-      tabBuilder: (context, index) {
-        switch (index) {
-          case 0:
-            return _buildWithNav(
-              const Text('Camera Settings Here'),
-            );
-          case 1:
-            return _buildWithNav(
-              MeteringPage(session: widget.session),
-            );
-          case 2:
-            return _buildWithNav(
-              DOFPage(session: widget.session),
-            );
-          case 3:
-            return _buildWithNav(
-              FactorsPage(session: widget.session),
-            );
-          case 4:
-            return _buildWithNav(
-              ExposurePage(session: widget.session),
-            );
-          default:
-            return _buildWithNav(
-              const Center(child: Text('Unknown')),
-            );
-        }
-      },
     );
   }
 
-  Widget _buildWithNav(Widget child) {
+  Widget _buildFlarePicker() {
+    final flareOptions = List.generate(31, (i) => (i * 0.01) + 0.01); // 0.01 to 0.31
+
+    return CupertinoActionSheet(
+      title: const Text("Select Flare Factor"),
+      message: SizedBox(
+        height: 150,
+        child: CupertinoPicker(
+          itemExtent: 32,
+          scrollController: FixedExtentScrollController(
+            initialItem: flareOptions.indexWhere((v) => v.toStringAsFixed(2) == _flareFactor.toStringAsFixed(2)),
+          ),
+          onSelectedItemChanged: (index) async {
+            final newValue = flareOptions[index];
+            await PrefsService.saveSetting('defaultPaperES', newValue.toString());
+            setState(() => _flareFactor = newValue);
+          },
+          children: flareOptions.map((f) => Text(f.toStringAsFixed(2))).toList(),
+        ),
+      ),
+      cancelButton: CupertinoActionSheetAction(
+        onPressed: () => Navigator.pop(context),
+        child: const Text("Done"),
+      ),
+    );
+  }
+
+  Widget _buildPaperESPicker() {
+    final esOptions = List.generate(41, (i) => 1.00 + i * 0.05); // 1.00 to 3.00
+
+    return CupertinoActionSheet(
+      title: const Text("Select Paper ES"),
+      message: SizedBox(
+        height: 150,
+        child: CupertinoPicker(
+          itemExtent: 32,
+          scrollController: FixedExtentScrollController(
+            initialItem: esOptions.indexWhere((v) => v.toStringAsFixed(2) == _paperES.toStringAsFixed(2)),
+          ),
+          onSelectedItemChanged: (index) async {
+            final newValue = esOptions[index];
+            await PrefsService.saveSetting('defaultPaperES', newValue.toString());
+            setState(() => _paperES = newValue);
+          },
+          children: esOptions.map((es) => Text(es.toStringAsFixed(2))).toList(),
+        ),
+      ),
+      cancelButton: CupertinoActionSheetAction(
+        onPressed: () => Navigator.pop(context),
+        child: const Text("Done"),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('Camera'),
+        middle: const Text("Camera"),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: const Text("Cancel"),
         ),
       ),
-      child: SafeArea(child: child),
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            CupertinoTextField(
+              controller: _titleController,
+              placeholder: "Title",
+            ),
+            const SizedBox(height: 12),
+            CupertinoTextField(
+              controller: _holderController,
+              placeholder: "Holder",
+            ),
+            const SizedBox(height: 12),
+            CupertinoListTile(
+              title: const Text("Film"),
+              trailing: Text(_selectedFilm),
+              onTap: () => _selectFromList(
+                "Film",
+                _films,
+                _selectedFilm,
+                    (value) => setState(() => _selectedFilm = value),
+              ),
+            ),
+            CupertinoListTile(
+              title: const Text("Focal Length"),
+              trailing: Text(_selectedFocalLength),
+              onTap: () => _selectFromList(
+                "Focal Length",
+                _focalLengths,
+                _selectedFocalLength,
+                    (value) => setState(() => _selectedFocalLength = value),
+              ),
+            ),
+            const SizedBox(height: 24),
+            CupertinoFormSection.insetGrouped(
+              header: const Text("Flare Factor & Paper ES"),
+              children: [
+                CupertinoListTile(
+                  title: const Text("Flare Factor"),
+                  trailing: CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: Text(_flareFactor.toStringAsFixed(2)),
+                    onPressed: () => showCupertinoModalPopup(
+                      context: context,
+                      builder: (_) => _buildFlarePicker(),
+                    ),
+                  ),
+                ),
+                CupertinoListTile(
+                  title: const Text("Paper ES"),
+                  trailing: CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: Text(_paperES.toStringAsFixed(2)),
+                    onPressed: () => showCupertinoModalPopup(
+                      context: context,
+                      builder: (_) => _buildPaperESPicker(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
