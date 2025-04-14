@@ -1,35 +1,82 @@
+// lib/utils/session.dart
+
 class Session {
-  String title;
-  String holder;
-  String defaultFilm;
-  String defaultFocalLength;
-  double defaultFlareFactor;
-  double defaultPaperES;
-  String defaultMeteringMethod;
-  double defaultLoZone;
-  double defaultHiZone;
-  String defaultFilter;
-  String defaultExposureAdjustment;
-  double defaultCoC;
+  // Camera Page
+  String exposureTitle;
+  String filmHolder;
+  String filmStock;
+  String focalLength;
+  double flareFactor;
+  double paperES;
+
+  // Metering Page
+  String meteringMethod;
+  int loZone;
+  int hiZone;
+
+  // Factors Page
+  String selectedFilter;
+  String exposureAdjustment;
+
+  // DOF Page
+  String filmSize;
   bool favorDOF;
   bool useOptimalAperture;
-  String defaultExposureMode;
+
+  // Metadata
+  DateTime timestamp;
 
   Session({
-    this.title = '',
-    this.holder = '',
-    this.defaultFilm = 'Not Set',
-    this.defaultFocalLength = 'Not Set',
-    this.defaultFlareFactor = 0.02,
-    this.defaultPaperES = 1.05,
-    this.defaultMeteringMethod = 'Incident',
-    this.defaultLoZone = 3.0,
-    this.defaultHiZone = 7.0,
-    this.defaultFilter = 'None',
-    this.defaultExposureAdjustment = 'none',
-    this.defaultCoC = 0.1,
-    this.favorDOF = false,
-    this.useOptimalAperture = false,
-    this.defaultExposureMode = 'Aperture',
-  });
+    this.exposureTitle = '',
+    this.filmHolder = '',
+    this.filmStock = '',
+    this.focalLength = '',
+    this.flareFactor = 0.02,
+    this.paperES = 1.05,
+    this.meteringMethod = 'Incident',
+    this.loZone = 3,
+    this.hiZone = 7,
+    this.selectedFilter = 'None',
+    this.exposureAdjustment = 'none',
+    this.filmSize = '4x5',
+    this.favorDOF = true,
+    this.useOptimalAperture = true,
+    DateTime? timestamp,
+  }) : timestamp = timestamp ?? DateTime.now();
+
+  Map<String, dynamic> toJson() => {
+    'exposureTitle': exposureTitle,
+    'filmHolder': filmHolder,
+    'filmStock': filmStock,
+    'focalLength': focalLength,
+    'flareFactor': flareFactor,
+    'paperES': paperES,
+    'meteringMethod': meteringMethod,
+    'loZone': loZone,
+    'hiZone': hiZone,
+    'selectedFilter': selectedFilter,
+    'exposureAdjustment': exposureAdjustment,
+    'filmSize': filmSize,
+    'favorDOF': favorDOF,
+    'useOptimalAperture': useOptimalAperture,
+    'timestamp': timestamp.toIso8601String(),
+  };
+
+  static Session fromJson(Map<String, dynamic> json) => Session(
+    exposureTitle: json['exposureTitle'] ?? '',
+    filmHolder: json['filmHolder'] ?? '',
+    filmStock: json['filmStock'] ?? '',
+    focalLength: json['focalLength'] ?? '',
+    flareFactor: (json['flareFactor'] ?? 0.02).toDouble(),
+    paperES: (json['paperES'] ?? 1.05).toDouble(),
+    meteringMethod: json['meteringMethod'] ?? 'Incident',
+    loZone: json['loZone'] ?? 3,
+    hiZone: json['hiZone'] ?? 7,
+    selectedFilter: json['selectedFilter'] ?? 'None',
+    exposureAdjustment: json['exposureAdjustment'] ?? 'none',
+    filmSize: json['filmSize'] ?? '4x5',
+    favorDOF: json['favorDOF'] ?? true,
+    useOptimalAperture: json['useOptimalAperture'] ?? true,
+    timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+  );
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
-import 'pages/exposure_list_page.dart'; // Only import what you use
+import 'package:btzs_sandbox/pages/exposure_list_page.dart';
+import 'package:btzs_sandbox/pages/exposure_flow_page.dart';
+import 'package:btzs_sandbox/utils/session.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: CupertinoThemeData(
         brightness: Brightness.dark,
       ),
-      home: ExposureListPage(), // This pulls in the rest
+      home: ExposureListPage(),
     );
   }
 }
