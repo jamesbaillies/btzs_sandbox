@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'session.dart';
-import 'exposure_summary_page.dart'; // ✅ Correct file name
+import '../utils/session.dart';
+import 'exposure_summary_page.dart'; // ✅ Correct if in the same folder
+
+
 
 class ExposurePage extends StatelessWidget {
   final Session session;

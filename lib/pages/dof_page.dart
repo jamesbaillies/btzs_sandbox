@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'session.dart';
+import 'package:btzs_sandbox/utils/session.dart';
+
 
 class DOFPage extends StatelessWidget {
   final Session session;

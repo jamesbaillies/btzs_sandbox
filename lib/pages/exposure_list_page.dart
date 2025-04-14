@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'camera_page.dart';
-import 'preferences_page.dart';
-import '../session.dart'; // ✅ Import your session model
+import 'package:btzs_sandbox/settings_page.dart';
+import 'package:btzs_sandbox/utils/session.dart';
+
+
 
 class ExposureListPage extends StatelessWidget {
   const ExposureListPage({super.key});
@@ -19,9 +21,10 @@ class ExposureListPage extends StatelessWidget {
   void _openPreferencesPage(BuildContext context) {
     Navigator.push(
       context,
-      CupertinoPageRoute(builder: (_) => const PreferencesPage()),
+      CupertinoPageRoute(builder: (_) => const SettingsPage()),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

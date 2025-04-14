@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'session.dart'; // Adjust path if needed
+import '../utils/session.dart'; // <-- Import Session class here
 
 class ExposureSummaryPage extends StatelessWidget {
   final Session session;
@@ -24,7 +24,6 @@ class ExposureSummaryPage extends StatelessWidget {
             _buildTile('Holder', session.filmHolder),
             _buildTile('Film Stock', session.filmStock),
             _buildTile('Focal Length', '${session.focalLength.toInt()}mm'),
-            // Add more summary tiles here as needed
           ],
         ),
       ),

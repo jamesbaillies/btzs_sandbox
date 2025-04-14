@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'session.dart';
+import '../utils/session.dart';
 
 class FactorsPage extends StatelessWidget {
   final Session session;

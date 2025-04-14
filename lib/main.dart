@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'exposure_list_page.dart'; // Only import what you use
+import 'pages/exposure_list_page.dart'; // Only import what you use
 
 void main() {
   runApp(const MyApp());
