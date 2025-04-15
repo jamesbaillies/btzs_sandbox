@@ -3,7 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'session.dart';
 
 class PrefsService {
-  // Load all app settings into a Map
+  // ✅ Singleton instance for .instance usage
+  static final PrefsService instance = PrefsService._internal();
+  PrefsService._internal();
+
+  // ✅ Load all app settings into a Map
   static Future<Map<String, dynamic>> loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     return {
@@ -27,42 +31,43 @@ class PrefsService {
     };
   }
 
-  // Save a single string setting
+  // ✅ Save a single string setting
   static Future<void> saveSetting(String key, String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(key, value);
   }
 
-  // Save a single boolean setting
+  // ✅ Save a single boolean setting
   static Future<void> saveBool(String key, bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, value);
   }
 
-  // Save a single double setting
+  // ✅ Save a single double setting
   static Future<void> saveDouble(String key, double value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(key, value);
   }
 
-  // Load a double with fallback
+  // ✅ Load a double with fallback
   static Future<double> loadDouble(String key, double fallback) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getDouble(key) ?? fallback;
   }
 
-  // Filter list support
+  // ✅ Filter list support
   static Future<void> saveFilterList(List<String> filters) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('filters', filters);
   }
 
-  static Future<List<String>> getFilterList() async {
+  Future<List<String>> getFilterList() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList('filters') ?? ['None'];
+    return prefs.getStringList('filters') ??
+        ['None', 'Light Yellow 3', 'Yellow 8', 'Orange 21']; // Default filters
   }
 
-  // Session persistence
+  // ✅ Session persistence
   static Future<void> saveSessions(List<Session> sessions) async {
     final prefs = await SharedPreferences.getInstance();
     final encoded = sessions.map((s) => jsonEncode(s.toJson())).toList();
@@ -75,7 +80,7 @@ class PrefsService {
     return encoded.map((s) => Session.fromJson(jsonDecode(s))).toList();
   }
 
-  // Optional: wipe everything
+  // ✅ Optional: wipe everything
   static Future<void> clearSettings() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();

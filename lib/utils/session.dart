@@ -8,15 +8,24 @@ class Session {
   String focalLength;
   double flareFactor;
   double paperES;
+  String? meteringMode;
+  int? ev;
 
   // Metering Page
-  String meteringMethod;
-  int loZone;
-  int hiZone;
+  String? meteringMethod;
+  double? loEv;
+  double? hiEv;
+  double? loZone;
+  double? hiZone;
+  String? meteringNotes;
+
 
   // Factors Page
-  String selectedFilter;
-  String exposureAdjustment;
+  String? selectedFilter;
+  String? bellowsFactorMode;
+  double? bellowsValue;
+  String? exposureAdjustment;
+
 
   // DOF Page
   String filmSize;

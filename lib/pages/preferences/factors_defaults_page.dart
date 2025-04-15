@@ -30,7 +30,7 @@ class _FactorsDefaultsPageState extends State<FactorsDefaultsPage> {
   }
 
   Future<void> _selectFilter(BuildContext context) async {
-    final filters = await PrefsService.getFilterList();
+    final filters = await PrefsService.instance.getFilterList(); // ✅ correct
     showCupertinoModalPopup(
       context: context,
       builder: (_) => CupertinoActionSheet(

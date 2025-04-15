@@ -19,27 +19,49 @@ class _FilterManagerPageState extends State<FilterManagerPage> {
   }
 
   Future<void> _loadFilters() async {
-    final filters = await PrefsService.getFilterList();
+    final filters = await PrefsService.instance.getFilterList();
+    if (!mounted) return;
     setState(() => _filters = List.from(filters));
   }
 
   Future<void> _saveFilters() async {
     await PrefsService.saveFilterList(_filters);
+
   }
 
   void _addFilter(String filter) {
     if (filter.isNotEmpty && !_filters.contains(filter)) {
-      setState(() {
-        _filters.add(filter);
-      });
+      setState(() => _filters.add(filter));
       _saveFilters();
     }
   }
 
+  void _confirmRemoveFilter(String filter) {
+    showCupertinoDialog(
+      context: context,
+      builder: (_) => CupertinoAlertDialog(
+        title: Text("Delete Filter"),
+        content: Text("Are you sure you want to delete \"$filter\"?"),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text("Cancel"),
+            onPressed: () => Navigator.pop(context),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            child: const Text("Delete"),
+            onPressed: () {
+              Navigator.pop(context);
+              _removeFilter(filter);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   void _removeFilter(String filter) {
-    setState(() {
-      _filters.remove(filter);
-    });
+    setState(() => _filters.remove(filter));
     _saveFilters();
   }
 
@@ -75,8 +97,10 @@ class _FilterManagerPageState extends State<FilterManagerPage> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: Container(
-                      decoration: BoxDecoration(
-                        border: Border(bottom: BorderSide(color: CupertinoColors.systemGrey, width: 0.5)),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: CupertinoColors.systemGrey, width: 0.5),
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -85,7 +109,7 @@ class _FilterManagerPageState extends State<FilterManagerPage> {
                           CupertinoButton(
                             padding: EdgeInsets.zero,
                             child: const Icon(CupertinoIcons.delete),
-                            onPressed: () => _removeFilter(filter),
+                            onPressed: () => _confirmRemoveFilter(filter),
                           ),
                         ],
                       ),

@@ -1,3 +1,5 @@
+// lib/pages/exposure_flow_page.dart
+
 import 'package:flutter/cupertino.dart';
 import 'package:btzs_sandbox/pages/camera_page.dart';
 import 'package:btzs_sandbox/pages/metering_page.dart';
@@ -44,7 +46,7 @@ class _ExposureFlowPageState extends State<ExposureFlowPage> {
 
   void _onTabChanged() {
     if (_tabController.index != _previousIndex) {
-      _saveTabData(_previousIndex);
+      _saveCurrentTabSettings(_previousIndex);
 
       if (_tabController.index == 4 && _showSummary) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -62,12 +64,15 @@ class _ExposureFlowPageState extends State<ExposureFlowPage> {
     }
   }
 
-  void _saveTabData(int index) {
-    // Add tab-specific save logic here later if needed
-    // For now, each page mutates `widget.session` directly
+  void _saveCurrentTabSettings(int index) {
+    // Optional: Add logic per tab index if needed
   }
 
-  void _finishAndSave() {
+  void _cancel() {
+    Navigator.pop(context);
+  }
+
+  void _doneAndSave() {
     widget.session.timestamp = DateTime.now();
     widget.onComplete(widget.session);
     Navigator.pop(context);
@@ -77,12 +82,12 @@ class _ExposureFlowPageState extends State<ExposureFlowPage> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('Exposure Setup'),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
-          onPressed: _finishAndSave,
-          child: const Text("Back"),
+          onPressed: _doneAndSave,
+          child: const Text('Back'),
         ),
+        middle: const Text('Exposure Flow'),
       ),
       child: CupertinoTabScaffold(
         controller: _tabController,
