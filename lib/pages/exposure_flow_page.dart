@@ -1,14 +1,12 @@
-// lib/pages/exposure_flow_page.dart
-
 import 'package:flutter/cupertino.dart';
-import 'package:btzs_sandbox/pages/camera_page.dart';
-import 'package:btzs_sandbox/pages/metering_page.dart';
-import 'package:btzs_sandbox/pages/factors_page.dart';
-import 'package:btzs_sandbox/pages/dof_page.dart';
-import 'package:btzs_sandbox/pages/exposure_page.dart';
-import 'package:btzs_sandbox/pages/exposure_summary_page.dart';
-import 'package:btzs_sandbox/utils/session.dart';
-import 'package:btzs_sandbox/utils/prefs_service.dart';
+import 'camera_page.dart';
+import 'metering_page.dart';
+import 'factors_page.dart';
+import 'dof_page.dart';
+import 'exposure_page.dart';
+import 'exposure_summary_page.dart';
+import '../utils/session.dart';
+import '../utils/prefs_service.dart';
 
 class ExposureFlowPage extends StatefulWidget {
   final Session session;
@@ -29,6 +27,13 @@ class _ExposureFlowPageState extends State<ExposureFlowPage> {
   int _previousIndex = 0;
   bool _showSummary = true;
 
+  // Define keys to access state
+  final cameraKey = GlobalKey<CameraPageState>();
+  final meteringKey = GlobalKey<MeteringPageState>();
+  final factorsKey = GlobalKey<FactorsPageState>();
+  final dofKey = GlobalKey(); // Placeholder for future DOFPageState
+  final exposureKey = GlobalKey(); // Placeholder
+
   @override
   void initState() {
     super.initState();
@@ -46,8 +51,9 @@ class _ExposureFlowPageState extends State<ExposureFlowPage> {
 
   void _onTabChanged() {
     if (_tabController.index != _previousIndex) {
-      _saveCurrentTabSettings(_previousIndex);
+      _saveTab(_previousIndex);
 
+      // Show summary
       if (_tabController.index == 4 && _showSummary) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _tabController.index = _previousIndex;
@@ -64,15 +70,23 @@ class _ExposureFlowPageState extends State<ExposureFlowPage> {
     }
   }
 
-  void _saveCurrentTabSettings(int index) {
-    // Optional: Add logic per tab index if needed
-  }
-
-  void _cancel() {
-    Navigator.pop(context);
+  void _saveTab(int index) {
+    switch (index) {
+      case 0:
+        cameraKey.currentState?.saveToSession();
+        break;
+      case 1:
+        meteringKey.currentState?.saveToSession();
+        break;
+      case 2:
+        factorsKey.currentState?.saveToSession();
+        break;
+    // Add more cases if needed
+    }
   }
 
   void _doneAndSave() {
+    _saveTab(_tabController.index);
     widget.session.timestamp = DateTime.now();
     widget.onComplete(widget.session);
     Navigator.pop(context);
@@ -82,11 +96,13 @@ class _ExposureFlowPageState extends State<ExposureFlowPage> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        leading: CupertinoButton(
+        leading: _tabController.index == 0
+            ? CupertinoButton(
           padding: EdgeInsets.zero,
           onPressed: _doneAndSave,
           child: const Text('Back'),
-        ),
+        )
+            : null,
         middle: const Text('Exposure Flow'),
       ),
       child: CupertinoTabScaffold(
@@ -103,11 +119,11 @@ class _ExposureFlowPageState extends State<ExposureFlowPage> {
         tabBuilder: (context, index) {
           switch (index) {
             case 0:
-              return CameraPage(session: widget.session);
+              return CameraPage(key: cameraKey, session: widget.session);
             case 1:
-              return MeteringPage(session: widget.session);
+              return MeteringPage(key: meteringKey, session: widget.session);
             case 2:
-              return FactorsPage(session: widget.session);
+              return FactorsPage(key: factorsKey, session: widget.session);
             case 3:
               return DOFPage(session: widget.session);
             case 4:

@@ -7,10 +7,10 @@ class MeteringPage extends StatefulWidget {
   const MeteringPage({super.key, required this.session});
 
   @override
-  State<MeteringPage> createState() => _MeteringPageState();
+  State<MeteringPage> createState() => MeteringPageState();
 }
 
-class _MeteringPageState extends State<MeteringPage> {
+class MeteringPageState extends State<MeteringPage> {
   late FixedExtentScrollController _loEvCtrl;
   late FixedExtentScrollController _hiEvCtrl;
   late FixedExtentScrollController _loZoneCtrl;
@@ -82,8 +82,10 @@ class _MeteringPageState extends State<MeteringPage> {
     final method = widget.session.meteringMethod!;
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
+        automaticallyImplyLeading: false,
         middle: Text("Metering"),
       ),
+
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

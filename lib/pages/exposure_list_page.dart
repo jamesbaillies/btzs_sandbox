@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'package:btzs_sandbox/utils/prefs_service.dart';
-import 'package:btzs_sandbox/utils/session.dart';
+import '../utils/session.dart';
+import '../utils/prefs_service.dart';
+import '/settings_page.dart'; // Ensure this import path is correct
+import 'exposure_flow_page.dart';
 
 class ExposureListPage extends StatefulWidget {
   const ExposureListPage({super.key});
@@ -11,6 +13,7 @@ class ExposureListPage extends StatefulWidget {
 
 class _ExposureListPageState extends State<ExposureListPage> {
   List<Session> _sessions = [];
+  bool _editMode = false;
 
   @override
   void initState() {
@@ -19,51 +22,79 @@ class _ExposureListPageState extends State<ExposureListPage> {
   }
 
   Future<void> _loadSessions() async {
-    final loaded = await PrefsService.loadSessions();
-    setState(() {
-      _sessions = loaded;
-    });
+    final prefs = await PrefsService.loadSessions();
+    setState(() => _sessions = prefs);
+  }
+
+  Future<void> _saveSessions() async {
+    await PrefsService.saveSessions(_sessions);
+  }
+
+  void _toggleEdit() {
+    setState(() => _editMode = !_editMode);
+  }
+
+  void _deleteSession(int index) {
+    setState(() => _sessions.removeAt(index));
+    _saveSessions();
   }
 
   void _addNewSession() {
     final newSession = Session(exposureTitle: "New Session");
-    setState(() => _sessions.add(newSession));
-    PrefsService.saveSessions(_sessions);
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (_) => ExposureFlowPage(
+          session: newSession,
+          onComplete: (updated) {
+            setState(() => _sessions.add(updated));
+            _saveSessions();
+          },
+        ),
+      ),
+    );
   }
 
-  Widget _buildSessionTile(Session session) {
-    return Column(
+  Widget _buildSessionTile(Session session, int index) {
+    return Row(
       children: [
-        GestureDetector(
-          onTap: () {
-            // TODO: Navigate to ExposureFlowPage
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            color: CupertinoColors.systemGrey6,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(session.exposureTitle ?? 'Untitled',
-                        style: const TextStyle(
-                            fontSize: 16, color: CupertinoColors.black)),
-                    Text(session.filmStock ?? 'No film selected',
-                        style: const TextStyle(
-                            fontSize: 13, color: CupertinoColors.systemGrey)),
-                  ],
-                ),
-                const Icon(CupertinoIcons.forward),
-              ],
+        if (_editMode)
+          Padding(
+            padding: const EdgeInsets.only(left: 12.0),
+            child: CupertinoButton(
+              padding: EdgeInsets.zero,
+              child: const Icon(CupertinoIcons.minus_circle, color: CupertinoColors.systemRed),
+              onPressed: () => _deleteSession(index),
             ),
           ),
-        ),
-        Container(
-          height: 1,
-          color: CupertinoColors.separator,
-          margin: const EdgeInsets.symmetric(horizontal: 16),
+        Expanded(
+          child: CupertinoListTile(
+            title: Text(session.exposureTitle ?? 'Untitled', style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Holder: ${session.filmHolder ?? '—'}"),
+                Text("Develop: ${session.filmStock ?? ''} @ 70.00F for 4m 30s"), // Sample dev string
+              ],
+            ),
+            trailing: Text(session.timestamp?.toString().split(' ').first ?? ''),
+            onTap: () {
+              if (!_editMode) {
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (_) => ExposureFlowPage(
+                      session: session,
+                      onComplete: (updated) {
+                        setState(() => _sessions[index] = updated);
+                        _saveSessions();
+                      },
+                    ),
+                  ),
+                );
+              }
+            },
+          ),
         ),
       ],
     );
@@ -72,23 +103,51 @@ class _ExposureListPageState extends State<ExposureListPage> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Exposure List'),
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('Exposures'),
+        leading: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: Text(_editMode ? 'Done' : 'Edit'),
+          onPressed: _toggleEdit,
+        ),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: const Icon(CupertinoIcons.add),
+          onPressed: _addNewSession,
+        ),
       ),
       child: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: _sessions.length,
-                itemBuilder: (context, index) {
-                  return _buildSessionTile(_sessions[index]);
-                },
-              ),
+            ListView.builder(
+              itemCount: _sessions.length,
+              itemBuilder: (context, index) =>
+                  _buildSessionTile(_sessions[index], index),
             ),
-            CupertinoButton(
-              child: const Text('Add New Exposure'),
-              onPressed: _addNewSession,
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    child: const Icon(CupertinoIcons.gear),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        CupertinoPageRoute(builder: (_) => const SettingsPage()),
+                      );
+                    },
+                  ),
+                  CupertinoButton(
+                    child: const Icon(CupertinoIcons.info),
+                    onPressed: () {
+                      // Info action (optional)
+                    },
+                  ),
+                ],
+              ),
             ),
           ],
         ),

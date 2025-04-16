@@ -7,10 +7,10 @@ class CameraPage extends StatefulWidget {
   const CameraPage({super.key, required this.session});
 
   @override
-  State<CameraPage> createState() => _CameraPageState();
+  State<CameraPage> createState() => CameraPageState();
 }
 
-class _CameraPageState extends State<CameraPage> {
+class CameraPageState extends State<CameraPage> {
   late TextEditingController _titleController;
   late TextEditingController _holderController;
 
@@ -66,8 +66,10 @@ class _CameraPageState extends State<CameraPage> {
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
+        automaticallyImplyLeading: false,
         middle: Text("Camera"),
       ),
+
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

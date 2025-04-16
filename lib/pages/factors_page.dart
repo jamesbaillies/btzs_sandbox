@@ -42,7 +42,8 @@ class _FactorsPageState extends State<FactorsPage> {
     _valueCtrl = FixedExtentScrollController(
         initialItem: valueRange.indexOf(widget.session.bellowsValue ?? 0.0));
     _adjustCtrl = FixedExtentScrollController(
-        initialItem: exposureAdjustments.indexOf(widget.session.exposureAdjustment ?? 'none'));
+        initialItem:
+        exposureAdjustments.indexOf(widget.session.exposureAdjustment ?? 'none'));
 
     _loadFilters();
   }
@@ -119,15 +120,17 @@ class _FactorsPageState extends State<FactorsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Exposure Adjustment", style: TextStyle(color: CupertinoColors.white)),
+        const Text("Exposure Adjustment",
+            style: TextStyle(color: CupertinoColors.white)),
         SizedBox(
           height: 100,
           child: CupertinoPicker(
             scrollController: _adjustCtrl,
             itemExtent: 32,
-            onSelectedItemChanged: (i) =>
-                setState(() => widget.session.exposureAdjustment = exposureAdjustments[i]),
-            children: exposureAdjustments.map((v) => Center(child: Text(v))).toList(),
+            onSelectedItemChanged: (i) => setState(
+                    () => widget.session.exposureAdjustment = exposureAdjustments[i]),
+            children:
+            exposureAdjustments.map((v) => Center(child: Text(v))).toList(),
           ),
         ),
       ],
@@ -191,3 +194,6 @@ class _FactorsPageState extends State<FactorsPage> {
     );
   }
 }
+
+// Add this at the very bottom of the file 👇
+typedef FactorsPageState = _FactorsPageState;
