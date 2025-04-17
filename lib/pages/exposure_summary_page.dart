@@ -1,48 +1,92 @@
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
-import '../utils/session.dart';
+import '../../utils/session.dart';
+import '../../utils/styles.dart';
 
 class ExposureSummaryPage extends StatelessWidget {
   final Session session;
+  final VoidCallback onDone;
 
-  const ExposureSummaryPage({super.key, required this.session});
+  const ExposureSummaryPage({
+    super.key,
+    required this.session,
+    required this.onDone,
+  });
+
+  String formatDouble(double? value, {int fractionDigits = 1, String suffix = ''}) {
+    if (value == null) return '—';
+    return '${value.toStringAsFixed(fractionDigits)}$suffix';
+  }
+
+  String formatTimestamp(DateTime? timestamp) {
+    if (timestamp == null) return '—';
+    return DateFormat('yyyy-MM-dd HH:mm').format(timestamp);
+  }
 
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text("Exposure Summary"),
+      navigationBar: CupertinoNavigationBar(
+        leading: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: onDone,
+          child: const Text('Back'),
+        ),
+        middle: const Text('Exposure Summary'),
       ),
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            _buildTile("Exposure Title", session.exposureTitle),
-            _buildTile("Film Holder", session.filmHolder),
-            _buildTile("Film Stock", session.filmStock),
-            _buildTile("Focal Length", session.focalLength?.toString()),
-            _buildTile("Aperture", session.aperture?.toStringAsFixed(1)),
-            _buildTile("Distance", session.distance?.toStringAsFixed(1)),
-            _buildTile("Near Distance", session.nearDistance?.toStringAsFixed(1)),
-            _buildTile("Far Distance", session.farDistance?.toStringAsFixed(1)),
-            _buildTile("Circle of Confusion", session.circleOfConfusion?.toStringAsFixed(3)),
-            _buildTile("Favor DOF", session.favorDOF == true ? "Yes" : "No"),
-            _buildTile("Timestamp", DateFormat.yMMMd().add_jm().format(session.timestamp)),
+            Text('📸 Camera Info', style: kFeedbackStyle),
+            const SizedBox(height: 4),
+            Text('Title: ${session.exposureTitle}', style: kFeedbackStyle),
+            Text('Holder: ${session.filmHolder}', style: kFeedbackStyle),
+            Text('Timestamp: ${formatTimestamp(session.timestamp)}', style: kFeedbackStyle),
+            Text('Focal Length: ${formatDouble(session.focalLength, suffix: ' mm')}', style: kFeedbackStyle),
+            const SizedBox(height: 16),
+
+            Text('🎞️ Film', style: kFeedbackStyle),
+            const SizedBox(height: 4),
+            Text('Film Stock: ${session.filmStock}', style: kFeedbackStyle),
+            const SizedBox(height: 16),
+
+            Text('☀️ Metering', style: kFeedbackStyle),
+            const SizedBox(height: 4),
+            Text('Method: ${session.meteringMethod}', style: kFeedbackStyle),
+            Text('Lo EV: ${formatDouble(session.loEv)}', style: kFeedbackStyle),
+            Text('Hi EV: ${formatDouble(session.hiEv)}', style: kFeedbackStyle),
+            if (session.meteringMethod == 'Zone') ...[
+              Text('Lo Zone: ${formatDouble(session.loZone)}', style: kFeedbackStyle),
+              Text('Hi Zone: ${formatDouble(session.hiZone)}', style: kFeedbackStyle),
+            ],
+            const SizedBox(height: 16),
+
+            Text('📐 Depth of Field', style: kFeedbackStyle),
+            const SizedBox(height: 4),
+            Text('Mode: ${session.dofMode}', style: kFeedbackStyle),
+            Text('Aperture: ${formatDouble(session.aperture)}', style: kFeedbackStyle),
+            Text('Distance: ${formatDouble(session.distance, suffix: ' m')}', style: kFeedbackStyle),
+            Text('Near: ${formatDouble(session.nearDistance, suffix: ' m')}', style: kFeedbackStyle),
+            Text('Far: ${formatDouble(session.farDistance, suffix: ' m')}', style: kFeedbackStyle),
+            Text('Rail Travel: ${formatDouble(session.railTravel, suffix: ' mm')}', style: kFeedbackStyle),
+            Text('Favor DOF: ${session.favorDOF == true ? "Yes" : "No"}', style: kFeedbackStyle),
+            const SizedBox(height: 16),
+
+            Text('📊 Factors', style: kFeedbackStyle),
+            const SizedBox(height: 4),
+            Text('Filter: ${session.selectedFilter ?? 'None'}', style: kFeedbackStyle),
+            Text('Bellows Mode: ${session.bellowsFactorMode ?? 'None'}', style: kFeedbackStyle),
+            Text('Bellows Factor: ${formatDouble(session.bellowsValue)}x', style: kFeedbackStyle),
+            Text('Exposure Adj: ${session.exposureAdjustment ?? 'None'}', style: kFeedbackStyle),
+            const SizedBox(height: 24),
+
+            CupertinoButton.filled(
+              onPressed: onDone,
+              child: const Text('Done'),
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTile(String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(flex: 2, child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(flex: 3, child: Text(value ?? '')),
-        ],
       ),
     );
   }

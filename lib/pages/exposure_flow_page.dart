@@ -60,9 +60,13 @@ class _ExposureFlowPageState extends State<ExposureFlowPage> {
           Navigator.push(
             context,
             CupertinoPageRoute(
-              builder: (_) => ExposureSummaryPage(session: widget.session),
+              builder: (_) => ExposureSummaryPage(
+                session: widget.session,
+                onDone: _doneAndSave, // ✅ Add this
+              ),
             ),
           );
+
         });
       }
 

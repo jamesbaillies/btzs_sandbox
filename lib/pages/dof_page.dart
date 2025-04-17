@@ -1,19 +1,18 @@
-// lib/pages/dof_page.dart
-
 import 'package:flutter/cupertino.dart';
 import '../utils/session.dart';
 import '../utils/dof_calculator.dart';
+import '../utils/styles.dart';
+
 
 class DOFPage extends StatefulWidget {
   final Session session;
-
   const DOFPage({super.key, required this.session});
 
   @override
-  State<DOFPage> createState() => DOFPageState();
+  State<DOFPage> createState() => _DOFPageState();
 }
 
-class DOFPageState extends State<DOFPage> {
+class _DOFPageState extends State<DOFPage> {
   late FixedExtentScrollController _apertureCtrl;
   late FixedExtentScrollController _distanceCtrl;
   late FixedExtentScrollController _nearCtrl;
@@ -63,7 +62,9 @@ class DOFPageState extends State<DOFPage> {
             scrollController: controller,
             itemExtent: 32,
             onSelectedItemChanged: (i) => setState(() => onChanged(values[i])),
-            children: values.map((v) => Center(child: Text('${v.toStringAsFixed(1)}${suffix ?? ''}'))).toList(),
+            children: values
+                .map((v) => Center(child: Text('${v.toStringAsFixed(1)}${suffix ?? ''}')))
+                .toList(),
           ),
         ),
       ],
@@ -71,15 +72,19 @@ class DOFPageState extends State<DOFPage> {
   }
 
   Widget _buildFeedback() {
-    final fl = widget.session.focalLength;
+    final fl = widget.session.focalLength ?? 0.0;
     final coc = widget.session.circleOfConfusion;
     final f = widget.session.aperture ?? 5.6;
     final dist = widget.session.distance ?? 5.0;
     final near = widget.session.nearDistance ?? 1.0;
     final far = widget.session.farDistance ?? 10.0;
 
-    if (fl == null || fl <= 0) {
-      return const Text('⚠️ Please select a focal length on the Camera page.');
+    if (fl <= 0) {
+      return const Text(
+        '⚠️ Please select a focal length on the Camera page.',
+        style: kFeedbackStyle,
+      );
+
     }
 
     switch (widget.session.dofMode) {
@@ -91,7 +96,6 @@ class DOFPageState extends State<DOFPage> {
           subjectDistanceM: dist,
         );
         return _buildResultCard(result);
-
       case 'Distance':
         final result = DOFCalculator.calculateFromNearFar(
           focalLengthMm: fl,
@@ -101,10 +105,8 @@ class DOFPageState extends State<DOFPage> {
           farDistanceM: far,
         );
         return _buildResultCard(result);
-
       case 'Focus':
         return const Text('Focus mode not yet implemented.');
-
       case 'None':
       default:
         return CupertinoListTile(
@@ -130,7 +132,9 @@ class DOFPageState extends State<DOFPage> {
             'Far: ${r.far.isInfinite ? '∞' : r.far.toStringAsFixed(2)} m\n'
             'DOF: ${r.total.isInfinite ? '∞' : r.total.toStringAsFixed(2)} m\n'
             'Hyperfocal: ${r.hyperfocal.toStringAsFixed(2)} m',
+        style: kFeedbackStyle,
       ),
+
     );
   }
 
@@ -140,8 +144,10 @@ class DOFPageState extends State<DOFPage> {
 
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
+        automaticallyImplyLeading: false,
         middle: Text("Depth of Field"),
       ),
+
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),

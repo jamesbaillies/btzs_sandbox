@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'dart:math';
-import '../utils/session.dart';
-import '../utils/prefs_service.dart';
+import 'package:flutter/material.dart';
+import '../../utils/session.dart';
+import '../../utils/styles.dart';
+
 
 class FactorsPage extends StatefulWidget {
   final Session session;
@@ -13,223 +14,204 @@ class FactorsPage extends StatefulWidget {
 }
 
 class FactorsPageState extends State<FactorsPage> {
-  final List<String> exposureAdjustments = [
-    'none', '+0.5', '+1', '+1.5', '+2', '-0.5', '-1',
+  late String selectedFilter;
+  late double filterFactor;
+  late String bellowsMode;
+  late double bellowsFactor;
+  late double extensionMm;
+  late double magnification;
+  late String exposureAdjustment;
+
+  final List<Map<String, dynamic>> filters = [
+    {'name': 'None', 'factor': 1.0},
+    {'name': 'Light Yellow 3', 'factor': 1.25},
+    {'name': 'Yellow 8', 'factor': 2.0},
+    {'name': 'Orange 21', 'factor': 2.5},
+    {'name': 'Red 25', 'factor': 3.0},
+    {'name': 'Green 58', 'factor': 2.5},
+    {'name': 'Blue 47', 'factor': 3.0},
   ];
 
-  final List<String> bellowsModes = ['None', 'Distance', 'Ext', 'Mag'];
-  final List<double> valueRange = List.generate(201, (i) => i * 0.1); // up to 20
-  late FixedExtentScrollController _valueCtrl;
-  late FixedExtentScrollController _adjustCtrl;
-
-  List<String> _filters = ['None'];
-  bool _loadingFilters = true;
+  final List<String> bellowsModes = ['None', 'Distance', 'Extension', 'Magnification'];
+  final List<String> exposureAdjustments = ['None', '+0.5 stop', '+1 stop', '+1.5 stop', '+2 stops'];
 
   @override
   void initState() {
     super.initState();
-    widget.session.bellowsFactorMode ??= 'None';
-    widget.session.bellowsValue ??= 0.0;
-    widget.session.selectedFilter ??= 'None';
-    widget.session.exposureAdjustment ??= 'none';
-
-    _valueCtrl = FixedExtentScrollController(
-      initialItem: valueRange.indexOf(widget.session.bellowsValue ?? 0.0),
-    );
-    _adjustCtrl = FixedExtentScrollController(
-      initialItem: exposureAdjustments.indexOf(widget.session.exposureAdjustment ?? 'none'),
-    );
-
-    _loadFilters();
+    selectedFilter = widget.session.selectedFilter ?? 'None';
+    filterFactor = filters.firstWhere((f) => f['name'] == selectedFilter, orElse: () => {'factor': 1.0})['factor'];
+    bellowsMode = widget.session.bellowsFactorMode ?? 'None';
+    bellowsFactor = widget.session.bellowsValue ?? 1.0;
+    exposureAdjustment = widget.session.exposureAdjustment ?? 'None';
+    extensionMm = 0.0;
+    magnification = 0.0;
+    _calculateBellowsFactor();
   }
 
-  Future<void> _loadFilters() async {
-    final filters = await PrefsService.instance.getFilterList();
-    setState(() {
-      _filters = filters;
-      _loadingFilters = false;
-    });
-  }
+  void _calculateBellowsFactor() {
+    final f = widget.session.focalLength;
+    if (f == null || f <= 0) return;
 
-  void saveToSession() {
-    widget.session.timestamp = DateTime.now();
-  }
-
-  double get focalLengthMm {
-    return widget.session.focalLength ?? 210.0;
-
-  }
-
-  Widget _buildCalculationBlock() {
-    final mode = widget.session.bellowsFactorMode!;
-    final value = widget.session.bellowsValue ?? 0.0;
-    final f = focalLengthMm;
-
-    double extension = 0.0;
-    double magnification = 0.0;
-    double bf = 1.0;
-
-    switch (mode) {
+    switch (bellowsMode) {
       case 'Distance':
-        final subjectDistanceM = value;
-        final subjectDistanceMm = subjectDistanceM * 1000.0;
-        extension = (f * subjectDistanceMm) / (subjectDistanceMm - f);
-        magnification = extension / f;
-        bf = pow(magnification + 1, 2).toDouble();
+        double distanceM = widget.session.distance ?? 1.0;
+        double ext = (f * distanceM) / (distanceM - f / 1000);
+        extensionMm = ext;
+        magnification = ext / f - 1;
+        bellowsFactor = (ext / f) * (ext / f);
         break;
-      case 'Ext':
-        extension = value;
-        magnification = extension / f;
-        bf = pow(magnification + 1, 2).toDouble();
+      case 'Extension':
+        double ext = widget.session.railTravel ?? 0.0;
+        extensionMm = ext;
+        magnification = ext / f - 1;
+        bellowsFactor = (ext / f) * (ext / f);
         break;
-      case 'Mag':
-        magnification = value;
-        extension = f * magnification;
-        bf = pow(magnification + 1, 2).toDouble();
+      case 'Magnification':
+        double mag = (widget.session.railTravel ?? 0.0) / f - 1;
+        magnification = mag;
+        bellowsFactor = (1 + mag) * (1 + mag);
         break;
       case 'None':
       default:
-        return const Text("Bellows factor will not be applied.");
+        extensionMm = 0;
+        magnification = 0;
+        bellowsFactor = 1.0;
     }
-
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        border: Border.all(color: CupertinoColors.systemGrey),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        'Focal Length: ${f.toStringAsFixed(0)} mm\n'
-            'Extension: ${extension.toStringAsFixed(1)} mm\n'
-            'Magnification: ${magnification.toStringAsFixed(3)}\n'
-            'Bellows Factor: ${bf.toStringAsFixed(2)}',
-        style: const TextStyle(color: CupertinoColors.white),
-      ),
-    );
   }
 
-  Widget _buildValuePicker() {
-    final mode = widget.session.bellowsFactorMode!;
-    String unit = '';
-    String label = '';
-
-    switch (mode) {
-      case 'Distance':
-        unit = 'm';
-        label = "Focus Distance";
-        break;
-      case 'Ext':
-        unit = 'mm';
-        label = "Extension";
-        break;
-      case 'Mag':
-        unit = '';
-        label = "Magnification";
-        break;
-      default:
-        return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(color: CupertinoColors.white)),
-        SizedBox(
-          height: 100,
-          child: CupertinoPicker(
-            scrollController: _valueCtrl,
-            itemExtent: 32,
-            onSelectedItemChanged: (i) =>
-                setState(() => widget.session.bellowsValue = valueRange[i]),
-            children: valueRange.map((v) => Center(child: Text('${v.toStringAsFixed(1)} $unit'))).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAdjustmentPicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Exposure Adjustment", style: TextStyle(color: CupertinoColors.white)),
-        SizedBox(
-          height: 100,
-          child: CupertinoPicker(
-            scrollController: _adjustCtrl,
-            itemExtent: 32,
-            onSelectedItemChanged: (i) =>
-                setState(() => widget.session.exposureAdjustment = exposureAdjustments[i]),
-            children: exposureAdjustments.map((v) => Center(child: Text(v))).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _selectFilter() {
+  void _showFilterPicker() {
     showCupertinoModalPopup(
       context: context,
-      builder: (_) => CupertinoActionSheet(
-        title: const Text("Select Filter"),
-        actions: _filters.map((filter) {
-          return CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() => widget.session.selectedFilter = filter);
-            },
-            child: Text(filter),
-          );
-        }).toList(),
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel"),
+      builder: (_) => Container(
+        height: 300,
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: CupertinoPicker(
+          itemExtent: 32,
+          scrollController: FixedExtentScrollController(
+              initialItem: filters.indexWhere((f) => f['name'] == selectedFilter)),
+          onSelectedItemChanged: (index) {
+            setState(() {
+              selectedFilter = filters[index]['name'];
+              filterFactor = filters[index]['factor'];
+            });
+          },
+          children: filters.map((f) => Text(f['name'])).toList(),
         ),
       ),
     );
+  }
+
+  void _showBellowsModePicker() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (_) => Container(
+        height: 300,
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: CupertinoPicker(
+          itemExtent: 32,
+          scrollController:
+          FixedExtentScrollController(initialItem: bellowsModes.indexOf(bellowsMode)),
+          onSelectedItemChanged: (index) {
+            setState(() {
+              bellowsMode = bellowsModes[index];
+              _calculateBellowsFactor();
+            });
+          },
+          children: bellowsModes.map((m) => Text(m)).toList(),
+        ),
+      ),
+    );
+  }
+
+  void _showExposureAdjustmentPicker() {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (_) => Container(
+        height: 300,
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        child: CupertinoPicker(
+          itemExtent: 32,
+          scrollController: FixedExtentScrollController(
+              initialItem: exposureAdjustments.indexOf(exposureAdjustment)),
+          onSelectedItemChanged: (index) {
+            setState(() {
+              exposureAdjustment = exposureAdjustments[index];
+            });
+          },
+          children: exposureAdjustments.map((e) => Text(e)).toList(),
+        ),
+      ),
+    );
+  }
+
+  String _getBellowsSummary() {
+    if (bellowsMode == 'None') return 'No bellows factor needed';
+    return 'Extension: ${extensionMm.toStringAsFixed(1)} mm\n'
+        'Magnification: ${magnification.toStringAsFixed(2)}\n'
+        'Bellows Factor: ${bellowsFactor.toStringAsFixed(2)}x';
+  }
+
+  void saveToSession() {
+    widget.session.selectedFilter = selectedFilter;
+    widget.session.bellowsFactorMode = bellowsMode;
+    widget.session.bellowsValue = bellowsFactor;
+    widget.session.exposureAdjustment = exposureAdjustment;
   }
 
   @override
   Widget build(BuildContext context) {
-    final mode = widget.session.bellowsFactorMode ?? 'None';
-
-    if (_loadingFilters) {
-      return const CupertinoPageScaffold(
-        navigationBar: CupertinoNavigationBar(
-          middle: Text("Factors"),
-        ),
-        child: Center(child: CupertinoActivityIndicator()),
-      );
-    }
+    final focalLength = widget.session.focalLength;
 
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
+        automaticallyImplyLeading: false,
         middle: Text("Factors"),
       ),
+
       child: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
           children: [
+            const SizedBox(height: 16),
             CupertinoListTile(
-              title: const Text("Filter"),
-              trailing: Text(widget.session.selectedFilter ?? 'None'),
-              onTap: _selectFilter,
+              title: const Text('Filter'),
+              trailing: Text(selectedFilter),
+              onTap: _showFilterPicker,
             ),
-            const SizedBox(height: 16),
-            CupertinoSegmentedControl<String>(
-              groupValue: mode,
-              onValueChanged: (val) =>
-                  setState(() => widget.session.bellowsFactorMode = val),
-              children: {
-                for (var val in bellowsModes) val: Text(val),
-              },
+            CupertinoListTile(
+              title: const Text('Filter Factor'),
+              trailing: Text('${filterFactor.toStringAsFixed(2)}x'),
             ),
-            const SizedBox(height: 16),
-            if (mode != 'None') _buildValuePicker(),
-            _buildCalculationBlock(),
-            const SizedBox(height: 16),
-            _buildAdjustmentPicker(),
+            const Divider(),
+            CupertinoListTile(
+              title: const Text('Bellows Mode'),
+              trailing: Text(bellowsMode),
+              onTap: _showBellowsModePicker,
+            ),
+            if (focalLength == null || focalLength <= 0)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  'Focal length not set on Camera Page',
+                  style: kFeedbackStyle,
+
+
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                child: Text(
+                  _getBellowsSummary(),
+                  style: kFeedbackStyle,
+
+                ),
+              ),
+            const Divider(),
+            CupertinoListTile(
+              title: const Text('Exposure Adjustment'),
+              trailing: Text(exposureAdjustment),
+              onTap: _showExposureAdjustmentPicker,
+            ),
           ],
         ),
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'dart:math';
 import '../utils/session.dart';
+import '../utils/styles.dart';
+
 
 class MeteringPage extends StatefulWidget {
   final Session session;
@@ -80,7 +82,7 @@ class MeteringPageState extends State<MeteringPage> {
       ValueChanged<double> onChanged, FixedExtentScrollController controller) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(color: CupertinoColors.white)),
+        Text(label, style: kFeedbackStyle),
         SizedBox(
           height: 100,
           child: CupertinoPicker(
@@ -181,8 +183,9 @@ class MeteringPageState extends State<MeteringPage> {
               ),
               child: Text(
                 feedback,
-                style: const TextStyle(color: CupertinoColors.white),
+                style: kFeedbackStyle,
               ),
+
             ),
             const SizedBox(height: 16),
             CupertinoTextField(
