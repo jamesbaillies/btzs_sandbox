@@ -1,17 +1,12 @@
-// lib/utils/session.dart
-
 class Session {
-  // Camera Page
+  // Shared Fields
   String exposureTitle;
   String filmHolder;
   String filmStock;
-  String focalLength;
-  double flareFactor;
-  double paperES;
-  String? meteringMode;
-  int? ev;
+  double? focalLength; // FIXED: was String before
+  DateTime timestamp;
 
-  // Metering Page
+  // Metering
   String? meteringMethod;
   double? loEv;
   double? hiEv;
@@ -19,37 +14,27 @@ class Session {
   double? hiZone;
   String? meteringNotes;
 
-
-  // Factors Page
+  // Factors
   String? selectedFilter;
   String? bellowsFactorMode;
   double? bellowsValue;
   String? exposureAdjustment;
 
-
-  // DOF Page
-  String filmSize;
-  bool favorDOF;
-  bool useOptimalAperture;
-
-  // Metadata
-  DateTime timestamp;
+  // DOF
+  String? dofMode;
+  double? aperture;
+  double? distance;
+  double? railTravel;
+  double? nearDistance;
+  double? farDistance;
+  double? circleOfConfusion;
+  bool? favorDOF;
 
   Session({
     this.exposureTitle = '',
     this.filmHolder = '',
-    this.filmStock = '',
-    this.focalLength = '',
-    this.flareFactor = 0.02,
-    this.paperES = 1.05,
-    this.meteringMethod = 'Incident',
-    this.loZone = 3,
-    this.hiZone = 7,
-    this.selectedFilter = 'None',
-    this.exposureAdjustment = 'none',
-    this.filmSize = '4x5',
-    this.favorDOF = true,
-    this.useOptimalAperture = true,
+    this.filmStock = 'Not Set',
+    this.focalLength, // FIXED: changed from 'Not Set'
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 
@@ -58,34 +43,52 @@ class Session {
     'filmHolder': filmHolder,
     'filmStock': filmStock,
     'focalLength': focalLength,
-    'flareFactor': flareFactor,
-    'paperES': paperES,
+    'timestamp': timestamp.toIso8601String(),
     'meteringMethod': meteringMethod,
+    'loEv': loEv,
+    'hiEv': hiEv,
     'loZone': loZone,
     'hiZone': hiZone,
+    'meteringNotes': meteringNotes,
     'selectedFilter': selectedFilter,
+    'bellowsFactorMode': bellowsFactorMode,
+    'bellowsValue': bellowsValue,
     'exposureAdjustment': exposureAdjustment,
-    'filmSize': filmSize,
+    'dofMode': dofMode,
+    'aperture': aperture,
+    'distance': distance,
+    'railTravel': railTravel,
+    'nearDistance': nearDistance,
+    'farDistance': farDistance,
+    'circleOfConfusion': circleOfConfusion,
     'favorDOF': favorDOF,
-    'useOptimalAperture': useOptimalAperture,
-    'timestamp': timestamp.toIso8601String(),
   };
 
-  static Session fromJson(Map<String, dynamic> json) => Session(
-    exposureTitle: json['exposureTitle'] ?? '',
-    filmHolder: json['filmHolder'] ?? '',
-    filmStock: json['filmStock'] ?? '',
-    focalLength: json['focalLength'] ?? '',
-    flareFactor: (json['flareFactor'] ?? 0.02).toDouble(),
-    paperES: (json['paperES'] ?? 1.05).toDouble(),
-    meteringMethod: json['meteringMethod'] ?? 'Incident',
-    loZone: json['loZone'] ?? 3,
-    hiZone: json['hiZone'] ?? 7,
-    selectedFilter: json['selectedFilter'] ?? 'None',
-    exposureAdjustment: json['exposureAdjustment'] ?? 'none',
-    filmSize: json['filmSize'] ?? '4x5',
-    favorDOF: json['favorDOF'] ?? true,
-    useOptimalAperture: json['useOptimalAperture'] ?? true,
-    timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
-  );
+  static Session fromJson(Map<String, dynamic> json) {
+    return Session(
+      exposureTitle: json['exposureTitle'] ?? '',
+      filmHolder: json['filmHolder'] ?? '',
+      filmStock: json['filmStock'] ?? 'Not Set',
+      focalLength: (json['focalLength'] as num?)?.toDouble(), // FIXED
+      timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+    )
+      ..meteringMethod = json['meteringMethod']
+      ..loEv = (json['loEv'] as num?)?.toDouble()
+      ..hiEv = (json['hiEv'] as num?)?.toDouble()
+      ..loZone = (json['loZone'] as num?)?.toDouble()
+      ..hiZone = (json['hiZone'] as num?)?.toDouble()
+      ..meteringNotes = json['meteringNotes']
+      ..selectedFilter = json['selectedFilter']
+      ..bellowsFactorMode = json['bellowsFactorMode']
+      ..bellowsValue = (json['bellowsValue'] as num?)?.toDouble()
+      ..exposureAdjustment = json['exposureAdjustment']
+      ..dofMode = json['dofMode']
+      ..aperture = (json['aperture'] as num?)?.toDouble()
+      ..distance = (json['distance'] as num?)?.toDouble()
+      ..railTravel = (json['railTravel'] as num?)?.toDouble()
+      ..nearDistance = (json['nearDistance'] as num?)?.toDouble()
+      ..farDistance = (json['farDistance'] as num?)?.toDouble()
+      ..circleOfConfusion = (json['circleOfConfusion'] as num?)?.toDouble()
+      ..favorDOF = json['favorDOF'] as bool?;
+  }
 }

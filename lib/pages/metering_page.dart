@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'dart:math';
 import '../utils/session.dart';
 
 class MeteringPage extends StatefulWidget {
@@ -17,8 +18,9 @@ class MeteringPageState extends State<MeteringPage> {
   late FixedExtentScrollController _hiZoneCtrl;
   late TextEditingController _notesController;
 
-  final List<double> evValues = List.generate(81, (i) => -10 + i * 0.25);
-  final List<double> zoneValues = List.generate(101, (i) => i * 0.1);
+  final List<double> evIncident = List.generate(121, (i) => -10 + i * 0.25); // -10 to 20
+  final List<double> evZone = List.generate(81, (i) => 0 + i * 0.25);         // 0 to 20
+  final List<double> zoneValues = List.generate(101, (i) => i * 0.1);         // 0 to 10
 
   @override
   void initState() {
@@ -31,13 +33,16 @@ class MeteringPageState extends State<MeteringPage> {
     widget.session.hiZone ??= 7.0;
     widget.session.meteringNotes ??= '';
 
-    _loEvCtrl = FixedExtentScrollController(initialItem: evValues.indexOf(widget.session.loEv!));
-    _hiEvCtrl = FixedExtentScrollController(initialItem: evValues.indexOf(widget.session.hiEv!));
+    _loEvCtrl = FixedExtentScrollController(initialItem: _evList.indexOf(widget.session.loEv!));
+    _hiEvCtrl = FixedExtentScrollController(initialItem: _evList.indexOf(widget.session.hiEv!));
     _loZoneCtrl = FixedExtentScrollController(initialItem: zoneValues.indexOf(widget.session.loZone!));
     _hiZoneCtrl = FixedExtentScrollController(initialItem: zoneValues.indexOf(widget.session.hiZone!));
 
     _notesController = TextEditingController(text: widget.session.meteringNotes);
   }
+
+  List<double> get _evList =>
+      widget.session.meteringMethod == 'Incident' ? evIncident : evZone;
 
   void saveToSession() {
     widget.session.timestamp = DateTime.now();
@@ -47,16 +52,28 @@ class MeteringPageState extends State<MeteringPage> {
   String get feedback {
     final loEv = widget.session.loEv!;
     final hiEv = widget.session.hiEv!;
-    final sbr = (hiEv - loEv).toStringAsFixed(1);
+    final sbr = hiEv - loEv;
+
+    final loZone = widget.session.loZone!;
+    final hiZone = widget.session.hiZone!;
+
+    final g = (hiEv - loEv).abs() > 0.01 ? (hiZone - loZone) / (hiEv - loEv) : double.nan;
+    final efs = 0.8 * pow(2, loZone - loEv);
+
+    final buffer = StringBuffer();
+    buffer.writeln("SBR: ${sbr.toStringAsFixed(1)}");
+    if (g.isNaN || g.isInfinite) {
+      buffer.writeln("G (Gradient): —");
+    } else {
+      buffer.writeln("G (Gradient): ${g.toStringAsFixed(3)}");
+    }
+    buffer.writeln("EFS (Effective Film Speed): ${efs.toStringAsFixed(2)}");
 
     if (widget.session.meteringMethod == 'Incident') {
-      return "SBR ($sbr) exceeds film's range";
-    } else {
-      if (widget.session.loZone! >= widget.session.hiZone!) {
-        return "Invalid metering choices";
-      }
-      return "SBR ($sbr)";
+      buffer.writeln("(G and EFS are based on BTZS zone assumptions)");
     }
+
+    return buffer.toString();
   }
 
   Widget _buildPicker(String label, double currentValue, List<double> values,
@@ -80,20 +97,26 @@ class MeteringPageState extends State<MeteringPage> {
   @override
   Widget build(BuildContext context) {
     final method = widget.session.meteringMethod!;
+    final evList = _evList;
+
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
         automaticallyImplyLeading: false,
         middle: Text("Metering"),
       ),
-
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             CupertinoSegmentedControl<String>(
               groupValue: method,
-              onValueChanged: (val) =>
-                  setState(() => widget.session.meteringMethod = val),
+              onValueChanged: (val) {
+                setState(() {
+                  widget.session.meteringMethod = val;
+                  _loEvCtrl = FixedExtentScrollController(initialItem: _evList.indexOf(widget.session.loEv!));
+                  _hiEvCtrl = FixedExtentScrollController(initialItem: _evList.indexOf(widget.session.hiEv!));
+                });
+              },
               children: const {
                 'Incident': Text('Incident'),
                 'Zone': Text('Zone'),
@@ -106,7 +129,7 @@ class MeteringPageState extends State<MeteringPage> {
                   child: _buildPicker(
                     "Lo EV",
                     widget.session.loEv!,
-                    evValues,
+                    evList,
                         (v) => widget.session.loEv = v,
                     _loEvCtrl,
                   ),
@@ -116,7 +139,7 @@ class MeteringPageState extends State<MeteringPage> {
                   child: _buildPicker(
                     "Hi EV",
                     widget.session.hiEv!,
-                    evValues,
+                    evList,
                         (v) => widget.session.hiEv = v,
                     _hiEvCtrl,
                   ),

@@ -98,15 +98,14 @@ class CameraPageState extends State<CameraPage> {
             ),
             CupertinoListTile(
               title: const Text("Focal Length"),
-              trailing: Text(widget.session.focalLength),
-              onTap: () =>
-                  _selectFromList(
-                    "Focal Length",
-                    _focalLengths,
-                    widget.session.focalLength,
-                        (value) =>
-                        setState(() => widget.session.focalLength = value),
-                  ),
+              trailing: Text(widget.session.focalLength?.toString() ?? 'Not Set'),
+              onTap: () => _selectFromList(
+                "Focal Length",
+                _focalLengths,
+                widget.session.focalLength?.toString() ?? '', // <-- non-null fallback
+                    (value) => setState(() => widget.session.focalLength = double.tryParse(value)),
+              ),
+
             ),
           ],
         ),

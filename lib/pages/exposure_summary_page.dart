@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import '../utils/session.dart'; // <-- Make sure path is correct
 import 'package:intl/intl.dart';
-
+import '../utils/session.dart';
 
 class ExposureSummaryPage extends StatelessWidget {
   final Session session;
@@ -10,26 +9,25 @@ class ExposureSummaryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = CupertinoTheme.of(context).textTheme.textStyle;
-
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
-        middle: Text('Summary'),
+        middle: Text("Exposure Summary"),
       ),
       child: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(
-              'Summary',
-              style: textStyle.copyWith(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            _buildTile('Title', session.exposureTitle),
-            _buildTile('Holder', session.filmHolder),
-            _buildTile('Film Stock', session.filmStock),
-            _buildTile('Focal Length', session.focalLength),
-
+            _buildTile("Exposure Title", session.exposureTitle),
+            _buildTile("Film Holder", session.filmHolder),
+            _buildTile("Film Stock", session.filmStock),
+            _buildTile("Focal Length", session.focalLength?.toString()),
+            _buildTile("Aperture", session.aperture?.toStringAsFixed(1)),
+            _buildTile("Distance", session.distance?.toStringAsFixed(1)),
+            _buildTile("Near Distance", session.nearDistance?.toStringAsFixed(1)),
+            _buildTile("Far Distance", session.farDistance?.toStringAsFixed(1)),
+            _buildTile("Circle of Confusion", session.circleOfConfusion?.toStringAsFixed(3)),
+            _buildTile("Favor DOF", session.favorDOF == true ? "Yes" : "No"),
+            _buildTile("Timestamp", DateFormat.yMMMd().add_jm().format(session.timestamp)),
           ],
         ),
       ),
@@ -37,10 +35,15 @@ class ExposureSummaryPage extends StatelessWidget {
   }
 
   Widget _buildTile(String label, String? value) {
-    return CupertinoFormRow(
+    return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      prefix: Text(label),
-      child: Text(value?.isNotEmpty == true ? value! : 'Not Set', textAlign: TextAlign.right),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(flex: 2, child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold))),
+          Expanded(flex: 3, child: Text(value ?? '')),
+        ],
+      ),
     );
   }
 }
