@@ -1,8 +1,5 @@
-// camera_page.dart
 import 'package:flutter/cupertino.dart';
-import '../utils/session.dart';
-import '../utils/styles.dart';
-
+import '../../utils/session.dart';
 
 class CameraPage extends StatefulWidget {
   final Session session;
@@ -10,98 +7,118 @@ class CameraPage extends StatefulWidget {
   const CameraPage({super.key, required this.session});
 
   @override
-  State<CameraPage> createState() => CameraPageState();
+  CameraPageState createState() => CameraPageState();
 }
 
 class CameraPageState extends State<CameraPage> {
   late TextEditingController _titleController;
   late TextEditingController _holderController;
-
-  final List<String> _films = [
-    'Not Set', 'APX DI#13 1+9 Lo', 'D100 DDX 1+9 Lo', 'TMY DDX 1+9 Lo'
-  ];
-
-  final List<double> _focalLengths = [90, 115, 210, 300];
+  late TextEditingController _flareController;
+  late TextEditingController _paperESController;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.session.exposureTitle);
-    _holderController = TextEditingController(text: widget.session.filmHolder);
+    _titleController = TextEditingController(text: widget.session.title ?? 'New Session');
+    _holderController = TextEditingController(text: widget.session.holder ?? '');
+    _flareController = TextEditingController(text: widget.session.flareFactor?.toString() ?? '1');
+    _paperESController = TextEditingController(text: widget.session.paperES?.toString() ?? '1');
   }
 
-  void _selectFromList<T>(String title, List<T> items, T current, Function(T) onSelected) {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (_) => CupertinoActionSheet(
-        title: Text(title),
-        actions: items.map((item) {
-          return CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(context);
-              onSelected(item);
-            },
-            child: Text(item.toString()),
-          );
-        }).toList(),
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel"),
-        ),
-      ),
-    );
+  void _showFilmPicker() {
+    // Implement your film picker modal here
   }
 
-  void saveToSession() {
-    widget.session.exposureTitle = _titleController.text;
-    widget.session.filmHolder = _holderController.text;
-    widget.session.timestamp = DateTime.now();
-
+  void _showFocalLengthPicker() {
+    // Implement your focal length picker modal here
   }
 
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text("Camera"),
-      ),
       child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            CupertinoTextField(
-              controller: _titleController,
-              placeholder: "Title",
-            ),
-            const SizedBox(height: 12),
-            CupertinoTextField(
-              controller: _holderController,
-              placeholder: "Holder",
-            ),
-            const SizedBox(height: 12),
-            CupertinoListTile(
-              title: const Text("Film"),
-              trailing: Text(widget.session.filmStock),
-              onTap: () => _selectFromList<String>(
-                "Film",
-                _films,
-                widget.session.filmStock,
-                    (value) => setState(() => widget.session.filmStock = value),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Inline Title Field
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    SizedBox(width: 80, child: Text('Title:')),
+                    Expanded(
+                      child: CupertinoTextField(
+                        controller: _titleController,
+                        placeholder: 'New Session',
+                        onChanged: (value) => widget.session.title = value,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            CupertinoListTile(
-              title: const Text("Focal Length"),
-              trailing: Text(widget.session.focalLength != null
-                  ? "${widget.session.focalLength!.toStringAsFixed(0)} mm"
-                  : "Not Set"),
-              onTap: () => _selectFromList<double>(
-                "Focal Length",
-                _focalLengths,
-                widget.session.focalLength ?? 210,
-                    (value) => setState(() => widget.session.focalLength = value),
+
+              // Inline Holder Field
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Row(
+                  children: [
+                    SizedBox(width: 80, child: Text('Holder:')),
+                    Expanded(
+                      child: CupertinoTextField(
+                        controller: _holderController,
+                        placeholder: 'Enter holder name/number',
+                        onChanged: (value) => widget.session.holder = value,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 16),
+              const Text('Film Stock'),
+              GestureDetector(
+                onTap: _showFilmPicker,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    'Select Film',
+                    style: TextStyle(color: CupertinoColors.activeBlue),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+              const Text('Focal Length'),
+              GestureDetector(
+                onTap: _showFocalLengthPicker,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    'Select Focal Length',
+                    style: TextStyle(color: CupertinoColors.activeBlue),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+              const Text('Flare Factor'),
+              CupertinoTextField(
+                controller: _flareController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onChanged: (value) => widget.session.flareFactor = double.tryParse(value) ?? 1.0,
+              ),
+
+              const SizedBox(height: 16),
+              const Text('Paper ES'),
+              CupertinoTextField(
+                controller: _paperESController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onChanged: (value) => widget.session.paperES = double.tryParse(value) ?? 1.0,
+              ),
+            ],
+          ),
         ),
       ),
     );

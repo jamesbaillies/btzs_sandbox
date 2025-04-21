@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:btzs_sandbox/utils/prefs_service.dart';
-import 'filter_manager_page.dart';
 
 class FactorsDefaultsPage extends StatefulWidget {
   const FactorsDefaultsPage({super.key});
@@ -10,80 +9,59 @@ class FactorsDefaultsPage extends StatefulWidget {
 }
 
 class _FactorsDefaultsPageState extends State<FactorsDefaultsPage> {
-  String _selectedFilter = 'None';
-  String _exposureAdjustment = 'none';
-
-  final List<String> _adjustments = ['none', '1/3 stop', '2/3 stop', '1 stop'];
+  late TextEditingController _filterController;
+  late TextEditingController _bellowsController;
+  late TextEditingController _totalFactorController;
 
   @override
   void initState() {
     super.initState();
-    _loadPrefs();
+    _filterController = TextEditingController();
+    _bellowsController = TextEditingController();
+    _totalFactorController = TextEditingController();
+    _loadDefaults();
   }
 
-  Future<void> _loadPrefs() async {
-    final prefs = await PrefsService.loadSettings();
+  @override
+  void dispose() {
+    _filterController.dispose();
+    _bellowsController.dispose();
+    _totalFactorController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadDefaults() async {
+    final defaults = await PrefsService.loadFactorsDefaults();
+    if (!mounted) return;
     setState(() {
-      _selectedFilter = prefs['selectedFilter'] ?? 'None';
-      _exposureAdjustment = prefs['exposureAdjustment'] ?? 'none';
+      _filterController.text = defaults['filter'] ?? '';
+      _bellowsController.text = (defaults['bellowsFactor'] ?? '').toString();
+      _totalFactorController.text = (defaults['totalFactor'] ?? '').toString();
     });
   }
 
-  Future<void> _selectFilter(BuildContext context) async {
-    final filters = await PrefsService.instance.getFilterList(); // ✅ correct
-    showCupertinoModalPopup(
-      context: context,
-      builder: (_) => CupertinoActionSheet(
-        title: const Text("Select Filter"),
-        actions: [
-          for (final filter in filters)
-            CupertinoActionSheetAction(
-              onPressed: () async {
-                Navigator.pop(context);
-                await PrefsService.saveSetting('selectedFilter', filter);
-                setState(() => _selectedFilter = filter);
-              },
-              child: Text(filter),
-            ),
-          CupertinoActionSheetAction(
-            isDestructiveAction: false,
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                CupertinoPageRoute(builder: (_) => const FilterManagerPage()),
-              ).then((_) => _loadPrefs());
-            },
-            child: const Text("Edit Filters"),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Cancel"),
-        ),
-      ),
-    );
+  Future<void> _saveDefaults() async {
+    await PrefsService.saveFactorsDefaults({
+      'filter': _filterController.text,
+      'bellowsFactor': double.tryParse(_bellowsController.text) ?? 1.0,
+      'totalFactor': double.tryParse(_totalFactorController.text) ?? 1.0,
+    });
   }
 
-  Future<void> _selectExposureAdjustment(BuildContext context) async {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (_) => SizedBox(
-        height: 250,
-        child: CupertinoPicker(
-          backgroundColor: CupertinoColors.systemBackground.resolveFrom(context),
-          itemExtent: 32,
-          scrollController: FixedExtentScrollController(
-            initialItem: _adjustments.indexOf(_exposureAdjustment),
-          ),
-          onSelectedItemChanged: (index) async {
-            final value = _adjustments[index];
-            await PrefsService.saveSetting('exposureAdjustment', value);
-            setState(() => _exposureAdjustment = value);
-          },
-          children: _adjustments.map((adj) => Text(adj)).toList(),
+  Widget _buildTextField(String label, TextEditingController controller, {bool isNumeric = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label),
+        CupertinoTextField(
+          controller: controller,
+          keyboardType: isNumeric
+              ? const TextInputType.numberWithOptions(decimal: true)
+              : TextInputType.text,
+          onChanged: (_) => _saveDefaults(),
         ),
-      ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 
@@ -94,31 +72,16 @@ class _FactorsDefaultsPageState extends State<FactorsDefaultsPage> {
         middle: Text('Factors Defaults'),
       ),
       child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            CupertinoListSection.insetGrouped(
-              header: const Text("Filters"),
-              children: [
-                CupertinoListTile(
-                  title: const Text("Filters"),
-                  trailing: Text(_selectedFilter),
-                  onTap: () => _selectFilter(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            CupertinoListSection.insetGrouped(
-              header: const Text("Exposure Adjustment"),
-              children: [
-                CupertinoListTile(
-                  title: const Text("Exposure"),
-                  trailing: Text(_exposureAdjustment),
-                  onTap: () => _selectExposureAdjustment(context),
-                ),
-              ],
-            ),
-          ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTextField("Filter Used", _filterController),
+              _buildTextField("Bellows Factor", _bellowsController, isNumeric: true),
+              _buildTextField("Total Exposure Factor", _totalFactorController, isNumeric: true),
+            ],
+          ),
         ),
       ),
     );

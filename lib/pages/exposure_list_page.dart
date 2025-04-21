@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import '../utils/session.dart';
-import '../utils/prefs_service.dart';
-import '/settings_page.dart'; // Ensure this import path is correct
+import '../../utils/session.dart';
+import '../../utils/prefs_service.dart';
 import 'exposure_flow_page.dart';
+import 'exposure_summary_page.dart';
 
 class ExposureListPage extends StatefulWidget {
   const ExposureListPage({super.key});
@@ -13,7 +13,7 @@ class ExposureListPage extends StatefulWidget {
 
 class _ExposureListPageState extends State<ExposureListPage> {
   List<Session> _sessions = [];
-  bool _editMode = false;
+  bool _isEditing = false;
 
   @override
   void initState() {
@@ -22,134 +22,87 @@ class _ExposureListPageState extends State<ExposureListPage> {
   }
 
   Future<void> _loadSessions() async {
-    final prefs = await PrefsService.loadSessions();
-    setState(() => _sessions = prefs);
+    final sessions = await PrefsService.loadSessions();
+    setState(() {
+      _sessions = sessions;
+    });
   }
 
   Future<void> _saveSessions() async {
     await PrefsService.saveSessions(_sessions);
   }
 
-  void _toggleEdit() {
-    setState(() => _editMode = !_editMode);
-  }
+  void _createNewSession() async {
+    final newSession = Session(); // blank new session
 
-  void _deleteSession(int index) {
-    setState(() => _sessions.removeAt(index));
-    _saveSessions();
-  }
-
-  void _addNewSession() {
-    final newSession = Session(exposureTitle: "New Session");
-    Navigator.push(
-      context,
+    await Navigator.of(context).push(
       CupertinoPageRoute(
-        builder: (_) => ExposureFlowPage(
-          session: newSession,
-          onComplete: (updated) {
-            setState(() => _sessions.add(updated));
-            _saveSessions();
-          },
-        ),
+        builder: (context) => ExposureFlowPage(session: newSession),
+      ),
+    );
+
+    if (newSession.title != null && newSession.film != null) {
+      // save only if session was filled
+      setState(() {
+        _sessions.add(newSession);
+      });
+      _saveSessions();
+    }
+  }
+
+  void _openSummary(Session session) {
+    Navigator.of(context).push(
+      CupertinoPageRoute(
+        builder: (context) => ExposureSummaryPage(session: session),
       ),
     );
   }
 
-  Widget _buildSessionTile(Session session, int index) {
-    return Row(
-      children: [
-        if (_editMode)
-          Padding(
-            padding: const EdgeInsets.only(left: 12.0),
-            child: CupertinoButton(
-              padding: EdgeInsets.zero,
-              child: const Icon(CupertinoIcons.minus_circle, color: CupertinoColors.systemRed),
-              onPressed: () => _deleteSession(index),
-            ),
-          ),
-        Expanded(
-          child: CupertinoListTile(
-            title: Text(session.exposureTitle ?? 'Untitled', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Holder: ${session.filmHolder ?? '—'}"),
-                Text("Develop: ${session.filmStock ?? ''} @ 70.00F for 4m 30s"), // Sample dev string
-              ],
-            ),
-            trailing: Text(session.timestamp?.toString().split(' ').first ?? ''),
-            onTap: () {
-              if (!_editMode) {
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (_) => ExposureFlowPage(
-                      session: session,
-                      onComplete: (updated) {
-                        setState(() => _sessions[index] = updated);
-                        _saveSessions();
-                      },
-                    ),
-                  ),
-                );
-              }
-            },
-          ),
-        ),
-      ],
-    );
+  void _toggleEdit() {
+    setState(() {
+      _isEditing = !_isEditing;
+    });
+  }
+
+  void _deleteSession(int index) {
+    setState(() {
+      _sessions.removeAt(index);
+    });
+    _saveSessions();
   }
 
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('Exposures'),
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
-          child: Text(_editMode ? 'Done' : 'Edit'),
-          onPressed: _toggleEdit,
+        middle: const Text('BTZS Sessions'),
+        leading: GestureDetector(
+          onTap: _toggleEdit,
+          child: Text(_isEditing ? 'Done' : 'Edit'),
         ),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
+        trailing: GestureDetector(
+          onTap: _createNewSession,
           child: const Icon(CupertinoIcons.add),
-          onPressed: _addNewSession,
         ),
       ),
       child: SafeArea(
-        child: Stack(
-          children: [
-            ListView.builder(
-              itemCount: _sessions.length,
-              itemBuilder: (context, index) =>
-                  _buildSessionTile(_sessions[index], index),
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CupertinoButton(
-                    child: const Icon(CupertinoIcons.gear),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(builder: (_) => const SettingsPage()),
-                      );
-                    },
-                  ),
-                  CupertinoButton(
-                    child: const Icon(CupertinoIcons.info),
-                    onPressed: () {
-                      // Info action (optional)
-                    },
-                  ),
-                ],
+        child: ListView.builder(
+          itemCount: _sessions.length,
+          itemBuilder: (context, index) {
+            final session = _sessions[index];
+            return Dismissible(
+              key: ValueKey(session.timestamp ?? index),
+              direction: _isEditing ? DismissDirection.endToStart : DismissDirection.none,
+              background: Container(color: CupertinoColors.systemRed),
+              onDismissed: (_) => _deleteSession(index),
+              child: CupertinoListTile(
+                title: Text(session.title ?? 'Untitled'),
+                subtitle: Text(session.film ?? 'No Film Selected'),
+                trailing: const Icon(CupertinoIcons.right_chevron),
+                onTap: () => _openSummary(session),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

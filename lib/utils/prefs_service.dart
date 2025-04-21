@@ -3,86 +3,97 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'session.dart';
 
 class PrefsService {
-  // ✅ Singleton instance for .instance usage
-  static final PrefsService instance = PrefsService._internal();
-  PrefsService._internal();
+  // Keys
+  static const _sessionKey = 'btzs_sessions';
+  static const _meteringKey = 'metering_defaults';
+  static const _globalSettingsKey = 'global_settings';
+  static const _factorsKey = 'factors_defaults';
 
-  // ✅ Load all app settings into a Map
-  static Future<Map<String, dynamic>> loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    return {
-      'units': prefs.getString('units') ?? 'Metric',
-      'evSteps': prefs.getString('evSteps') ?? '1/10 EV',
-      'showSummary': prefs.getBool('showSummary') ?? true,
-      'numberedHolders': prefs.getBool('numberedHolders') ?? true,
-      'defaultFilm': prefs.getString('defaultFilm') ?? 'Not Set',
-      'defaultFocalLength': prefs.getString('defaultFocalLength') ?? 'Not Set',
-      'defaultFlareFactor': prefs.getDouble('defaultFlareFactor') ?? 0.02,
-      'defaultPaperES': prefs.getDouble('defaultPaperES') ?? 1.05,
-      'meteringMethod': prefs.getString('meteringMethod') ?? 'Incident',
-      'loZone': prefs.getDouble('loZone') ?? 3.0,
-      'hiZone': prefs.getDouble('hiZone') ?? 7.0,
-      'selectedFilter': prefs.getString('selectedFilter') ?? 'None',
-      'exposureAdjustment': prefs.getString('exposureAdjustment') ?? 'none',
-      'coc': prefs.getDouble('coc') ?? 0.1,
-      'favorDOF': prefs.getBool('favorDOF') ?? false,
-      'useOptimalAperture': prefs.getBool('useOptimalAperture') ?? false,
-      'exposureMode': prefs.getString('exposureMode') ?? 'Aperture',
-    };
-  }
-
-  // ✅ Save a single string setting
-  static Future<void> saveSetting(String key, String value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(key, value);
-  }
-
-  // ✅ Save a single boolean setting
-  static Future<void> saveBool(String key, bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(key, value);
-  }
-
-  // ✅ Save a single double setting
-  static Future<void> saveDouble(String key, double value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(key, value);
-  }
-
-  // ✅ Load a double with fallback
-  static Future<double> loadDouble(String key, double fallback) async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(key) ?? fallback;
-  }
-
-  // ✅ Filter list support
-  static Future<void> saveFilterList(List<String> filters) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('filters', filters);
-  }
-
-  Future<List<String>> getFilterList() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList('filters') ??
-        ['None', 'Light Yellow 3', 'Yellow 8', 'Orange 21']; // Default filters
-  }
-
-  // ✅ Session persistence
-  static Future<void> saveSessions(List<Session> sessions) async {
-    final prefs = await SharedPreferences.getInstance();
-    final encoded = sessions.map((s) => jsonEncode(s.toJson())).toList();
-    await prefs.setStringList('sessions', encoded);
-  }
+  // 🟢 EXPOSURE SESSIONS
 
   static Future<List<Session>> loadSessions() async {
     final prefs = await SharedPreferences.getInstance();
-    final encoded = prefs.getStringList('sessions') ?? [];
-    return encoded.map((s) => Session.fromJson(jsonDecode(s))).toList();
+    final jsonString = prefs.getString(_sessionKey);
+    if (jsonString == null) return [];
+
+    final List<dynamic> decoded = json.decode(jsonString);
+    return decoded.map((e) => Session.fromJson(e)).toList();
   }
 
-  // ✅ Optional: wipe everything
-  static Future<void> clearSettings() async {
+  static Future<void> saveSessions(List<Session> sessions) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    final encoded = json.encode(sessions.map((e) => e.toJson()).toList());
+    await prefs.setString(_sessionKey, encoded);
   }
+
+  static Future<void> saveSession(Session session) async {
+    final sessions = await loadSessions();
+    sessions.add(session);
+    await saveSessions(sessions);
+  }
+
+  static Future<void> clearSessions() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_sessionKey);
+  }
+
+  // 🟡 METERING DEFAULTS
+
+  static Future<Map<String, dynamic>> loadMeteringDefaults() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_meteringKey);
+    if (jsonString == null) return {};
+    return json.decode(jsonString) as Map<String, dynamic>;
+  }
+
+  static Future<void> saveMeteringDefaults(Map<String, dynamic> values) async {
+    final prefs = await SharedPreferences.getInstance();
+    final encoded = json.encode(values);
+    await prefs.setString(_meteringKey, encoded);
+  }
+
+  // ⚙️ GLOBAL SETTINGS
+
+  static Future<Map<String, dynamic>> loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_globalSettingsKey);
+    if (jsonString == null) return {};
+    return json.decode(jsonString) as Map<String, dynamic>;
+  }
+
+  static Future<void> saveSetting(String key, dynamic value) async {
+    final prefs = await SharedPreferences.getInstance();
+    final current = await loadSettings();
+    current[key] = value;
+    final encoded = json.encode(current);
+    await prefs.setString(_globalSettingsKey, encoded);
+  }
+
+  // 📐 FACTORS DEFAULTS
+
+  static Future<Map<String, dynamic>> loadFactorsDefaults() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_factorsKey);
+    if (jsonString == null) return {};
+    return json.decode(jsonString) as Map<String, dynamic>;
+  }
+
+  static Future<void> saveFactorsDefaults(Map<String, dynamic> values) async {
+    final prefs = await SharedPreferences.getInstance();
+    final encoded = json.encode(values);
+    await prefs.setString(_factorsKey, encoded);
+  }
+  static const _filterListKey = 'filter_list';
+
+  static Future<List<String>> loadFilterList() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList(_filterListKey);
+    return list ?? [];
+  }
+
+  static Future<void> saveFilterList(List<String> filters) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_filterListKey, filters);
+  }
+
 }

@@ -1,0 +1,130 @@
+﻿
+lib\pages\preferences\camera_defaults_page.dart:4:class CameraDefaultsPage extends StatefulWidget {
+lib\pages\preferences\camera_defaults_page.dart:7:  @override
+lib\pages\preferences\camera_defaults_page.dart:8:  State<CameraDefaultsPage> createState() => 
+_CameraDefaultsPageState();
+lib\pages\preferences\camera_defaults_page.dart:11:class _CameraDefaultsPageState extends State<CameraDefaultsPage> {
+lib\pages\preferences\camera_defaults_page.dart:33:  @override
+lib\pages\preferences\camera_defaults_page.dart:107:  @override
+lib\pages\preferences\camera_defaults_page.dart:108:  Widget build(BuildContext context) {
+lib\pages\camera_page.dart:4:class CameraPage extends StatefulWidget {
+lib\pages\camera_page.dart:9:  @override
+lib\pages\camera_page.dart:10:  State<CameraPage> createState() => CameraPageState();
+lib\pages\camera_page.dart:13:class CameraPageState extends State<CameraPage> {
+lib\pages\camera_page.dart:25:  @override
+lib\pages\camera_page.dart:65:  @override
+lib\pages\camera_page.dart:66:  Widget build(BuildContext context) {
+lib\pages\preferences\defaults_page.dart:8:class DefaultsPage extends StatelessWidget {
+lib\pages\preferences\defaults_page.dart:11:  @override
+lib\pages\preferences\defaults_page.dart:12:  Widget build(BuildContext context) {
+lib\utils\dof_calculator.dart:2:class DOFCalculator {
+lib\utils\dof_calculator.dart:134:/// Data class to hold depth-of-field calculation results.
+lib\utils\dof_calculator.dart:135:class DOFResult {
+lib\pages\preferences\dof_defaults_page.dart:4:class DofDefaultsPage extends StatefulWidget {
+lib\pages\preferences\dof_defaults_page.dart:7:  @override
+lib\pages\preferences\dof_defaults_page.dart:8:  State<DofDefaultsPage> createState() => _DofDefaultsPageState();
+lib\pages\preferences\dof_defaults_page.dart:11:class _DofDefaultsPageState extends State<DofDefaultsPage> {
+lib\pages\preferences\dof_defaults_page.dart:25:  @override
+lib\pages\preferences\dof_defaults_page.dart:79:  @override
+lib\pages\preferences\dof_defaults_page.dart:80:  Widget build(BuildContext context) {
+lib\pages\dof_page.dart:5:class DOFPage extends StatefulWidget {
+lib\pages\dof_page.dart:10:  @override
+lib\pages\dof_page.dart:11:  State<DOFPage> createState() => _DOFPageState();
+lib\pages\dof_page.dart:14:class _DOFPageState extends State<DOFPage> {
+lib\pages\dof_page.dart:23:  @override
+lib\pages\dof_page.dart:147:  @override
+lib\pages\dof_page.dart:148:  Widget build(BuildContext context) {
+lib\pages\preferences\exposure_defaults_page.dart:4:class ExposureDefaultsPage extends StatefulWidget {
+lib\pages\preferences\exposure_defaults_page.dart:7:  @override
+lib\pages\preferences\exposure_defaults_page.dart:8:  State<ExposureDefaultsPage> createState() => 
+_ExposureDefaultsPageState();
+lib\pages\preferences\exposure_defaults_page.dart:11:class _ExposureDefaultsPageState extends 
+State<ExposureDefaultsPage> {
+lib\pages\preferences\exposure_defaults_page.dart:14:  @override
+lib\pages\preferences\exposure_defaults_page.dart:60:  @override
+lib\pages\preferences\exposure_defaults_page.dart:61:  Widget build(BuildContext context) {
+lib\pages\exposure_flow_page.dart:11:class ExposureFlowPage extends StatefulWidget {
+lib\pages\exposure_flow_page.dart:21:  @override
+lib\pages\exposure_flow_page.dart:22:  State<ExposureFlowPage> createState() => _ExposureFlowPageState();
+lib\pages\exposure_flow_page.dart:25:class _ExposureFlowPageState extends State<ExposureFlowPage> {
+lib\pages\exposure_flow_page.dart:37:  @override
+lib\pages\exposure_flow_page.dart:95:  @override
+lib\pages\exposure_flow_page.dart:96:  Widget build(BuildContext context) {
+lib\pages\exposure_flow_page.dart:139:  @override
+lib\pages\exposure_list_page.dart:7:class ExposureListPage extends StatefulWidget {
+lib\pages\exposure_list_page.dart:10:  @override
+lib\pages\exposure_list_page.dart:11:  State<ExposureListPage> createState() => _ExposureListPageState();
+lib\pages\exposure_list_page.dart:14:class _ExposureListPageState extends State<ExposureListPage> {
+lib\pages\exposure_list_page.dart:18:  @override
+lib\pages\exposure_list_page.dart:103:  @override
+lib\pages\exposure_list_page.dart:104:  Widget build(BuildContext context) {
+lib\pages\exposure_page.dart:7:class ExposurePage extends StatelessWidget {
+lib\pages\exposure_page.dart:12:  @override
+lib\pages\exposure_page.dart:13:  Widget build(BuildContext context) {
+lib\pages\exposure_summary_page.dart:6:class ExposureSummaryPage extends StatelessWidget {
+lib\pages\exposure_summary_page.dart:11:  @override
+lib\pages\exposure_summary_page.dart:12:  Widget build(BuildContext context) {
+lib\pages\preferences\factors_defaults_page.dart:5:class FactorsDefaultsPage extends StatefulWidget {
+lib\pages\preferences\factors_defaults_page.dart:8:  @override
+lib\pages\preferences\factors_defaults_page.dart:9:  State<FactorsDefaultsPage> createState() => 
+_FactorsDefaultsPageState();
+lib\pages\preferences\factors_defaults_page.dart:12:class _FactorsDefaultsPageState extends State<FactorsDefaultsPage> 
+{
+lib\pages\preferences\factors_defaults_page.dart:18:  @override
+lib\pages\preferences\factors_defaults_page.dart:90:  @override
+lib\pages\preferences\factors_defaults_page.dart:91:  Widget build(BuildContext context) {
+lib\pages\factors_page.dart:5:class FactorsPage extends StatefulWidget {
+lib\pages\factors_page.dart:10:  @override
+lib\pages\factors_page.dart:11:  State<FactorsPage> createState() => _FactorsPageState();
+lib\pages\factors_page.dart:14:class _FactorsPageState extends State<FactorsPage> {
+lib\pages\factors_page.dart:34:  @override
+lib\pages\factors_page.dart:140:  @override
+lib\pages\factors_page.dart:141:  Widget build(BuildContext context) {
+lib\pages\preferences\filter_manager_page.dart:4:class FilterManagerPage extends StatefulWidget {
+lib\pages\preferences\filter_manager_page.dart:7:  @override
+lib\pages\preferences\filter_manager_page.dart:8:  State<FilterManagerPage> createState() => _FilterManagerPageState();
+lib\pages\preferences\filter_manager_page.dart:11:class _FilterManagerPageState extends State<FilterManagerPage> {
+lib\pages\preferences\filter_manager_page.dart:15:  @override
+lib\pages\preferences\filter_manager_page.dart:68:  @override
+lib\pages\preferences\filter_manager_page.dart:69:  Widget build(BuildContext context) {
+lib\main.dart:10:class MyApp extends StatelessWidget {
+lib\main.dart:13:  @override
+lib\main.dart:14:  Widget build(BuildContext context) {
+lib\pages\preferences\metering_defaults_page.dart:4:class MeteringDefaultsPage extends StatefulWidget {
+lib\pages\preferences\metering_defaults_page.dart:7:  @override
+lib\pages\preferences\metering_defaults_page.dart:8:  State<MeteringDefaultsPage> createState() => 
+_MeteringDefaultsPageState();
+lib\pages\preferences\metering_defaults_page.dart:11:class _MeteringDefaultsPageState extends 
+State<MeteringDefaultsPage> {
+lib\pages\preferences\metering_defaults_page.dart:19:  @override
+lib\pages\preferences\metering_defaults_page.dart:84:  @override
+lib\pages\preferences\metering_defaults_page.dart:85:  Widget build(BuildContext context) {
+lib\pages\metering_page.dart:4:class MeteringPage extends StatefulWidget {
+lib\pages\metering_page.dart:9:  @override
+lib\pages\metering_page.dart:10:  State<MeteringPage> createState() => MeteringPageState();
+lib\pages\metering_page.dart:13:class MeteringPageState extends State<MeteringPage> {
+lib\pages\metering_page.dart:23:  @override
+lib\pages\metering_page.dart:80:  @override
+lib\pages\metering_page.dart:81:  Widget build(BuildContext context) {
+lib\pages\preferences\preferences_page.dart:7:class PreferencesPage extends StatelessWidget {
+lib\pages\preferences\preferences_page.dart:10:  @override
+lib\pages\preferences\preferences_page.dart:11:  Widget build(BuildContext context) {
+lib\utils\prefs_service.dart:5:class PrefsService {
+lib\utils\session.dart:1:class Session {
+lib\settings_page.dart:11:class SettingsPage extends StatefulWidget {
+lib\settings_page.dart:14:  @override
+lib\settings_page.dart:15:  State<SettingsPage> createState() => _SettingsPageState();
+lib\settings_page.dart:18:class _SettingsPageState extends State<SettingsPage> {
+lib\settings_page.dart:22:  @override
+lib\settings_page.dart:58:  @override
+lib\settings_page.dart:59:  Widget build(BuildContext context) {
+lib\pages\preferences\sub_preferences_page.dart:4:class SubPreferencesPage extends StatefulWidget {
+lib\pages\preferences\sub_preferences_page.dart:7:  @override
+lib\pages\preferences\sub_preferences_page.dart:8:  State<SubPreferencesPage> createState() => 
+_SubPreferencesPageState();
+lib\pages\preferences\sub_preferences_page.dart:11:class _SubPreferencesPageState extends State<SubPreferencesPage> {
+lib\pages\preferences\sub_preferences_page.dart:15:  @override
+lib\pages\preferences\sub_preferences_page.dart:34:  @override
+lib\pages\preferences\sub_preferences_page.dart:35:  Widget build(BuildContext context) {
+
+

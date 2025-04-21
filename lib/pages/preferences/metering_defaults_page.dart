@@ -14,25 +14,30 @@ class _MeteringDefaultsPageState extends State<MeteringDefaultsPage> {
   double _hiZone = 7.0;
 
   final List<String> meteringOptions = ['Incident', 'Zone'];
-  final List<double> zoneValues = List.generate(81, (i) => i / 10 + 1.0); // Zones 1.0 to 9.0
+  final List<double> zoneValues = List.generate(81, (i) => i / 10 + 1.0); // 1.0 to 9.0
 
   @override
   void initState() {
     super.initState();
-    _loadPrefs();
+    _loadDefaults();
   }
 
-  Future<void> _loadPrefs() async {
-    final prefs = await PrefsService.loadSettings();
+  Future<void> _loadDefaults() async {
+    final prefs = await PrefsService.loadMeteringDefaults();
+    if (!mounted) return;
     setState(() {
       _meteringMethod = prefs['meteringMethod'] ?? 'Incident';
-      _loZone = double.tryParse(prefs['loZone'] ?? '3.0') ?? 3.0;
-      _hiZone = double.tryParse(prefs['hiZone'] ?? '7.0') ?? 7.0;
+      _loZone = prefs['loZone'] ?? 3.0;
+      _hiZone = prefs['hiZone'] ?? 7.0;
     });
   }
 
-  Future<void> _savePref(String key, String value) async {
-    await PrefsService.saveSetting(key, value);
+  Future<void> _saveDefaults() async {
+    await PrefsService.saveMeteringDefaults({
+      'meteringMethod': _meteringMethod,
+      'loZone': _loZone,
+      'hiZone': _hiZone,
+    });
   }
 
   void _showMeteringMethodPicker() {
@@ -47,7 +52,7 @@ class _MeteringDefaultsPageState extends State<MeteringDefaultsPage> {
               setState(() {
                 _meteringMethod = method;
               });
-              _savePref('meteringMethod', method);
+              _saveDefaults();
             },
             child: Text(method),
           );
@@ -62,29 +67,30 @@ class _MeteringDefaultsPageState extends State<MeteringDefaultsPage> {
 
   Widget _buildZonePicker(String label, double zoneValue, ValueChanged<double> onChanged) {
     final initialIndex = zoneValues.indexOf(zoneValue);
-
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: Text(label, style: CupertinoTheme.of(context).textTheme.textStyle)),
-        Expanded(
+        Text(label),
+        SizedBox(
+          height: 150,
           child: CupertinoPicker(
             scrollController: FixedExtentScrollController(initialItem: initialIndex),
             itemExtent: 32.0,
             onSelectedItemChanged: (index) {
-              double newZone = zoneValues[index];
+              final newZone = zoneValues[index];
               onChanged(newZone);
+              _saveDefaults();
             },
             children: zoneValues.map((z) => Center(child: Text(z.toStringAsFixed(1)))).toList(),
           ),
-        )
+        ),
+        const SizedBox(height: 16),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = CupertinoTheme.of(context).textTheme.textStyle;
-
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
         middle: Text("Metering Defaults"),
@@ -94,22 +100,15 @@ class _MeteringDefaultsPageState extends State<MeteringDefaultsPage> {
           padding: const EdgeInsets.all(16),
           children: [
             CupertinoListTile(
-              title: Text("Metering Method", style: textStyle),
+              title: const Text("Metering Method"),
               trailing: Text(_meteringMethod),
               onTap: _showMeteringMethodPicker,
             ),
             const SizedBox(height: 24),
-            Text("Zone Metering", style: textStyle.copyWith(fontWeight: FontWeight.bold)),
+            const Text("Zone Metering", style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            _buildZonePicker("Lo Zone", _loZone, (val) {
-              setState(() => _loZone = val);
-              _savePref('loZone', val.toString());
-            }),
-            const SizedBox(height: 8),
-            _buildZonePicker("Hi Zone", _hiZone, (val) {
-              setState(() => _hiZone = val);
-              _savePref('hiZone', val.toString());
-            }),
+            _buildZonePicker("Lo Zone", _loZone, (val) => setState(() => _loZone = val)),
+            _buildZonePicker("Hi Zone", _hiZone, (val) => setState(() => _hiZone = val)),
           ],
         ),
       ),
